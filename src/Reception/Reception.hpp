@@ -10,23 +10,31 @@
 
 #include "plazza.hpp"
 #include <vector>
-
+#include <memory>
 
 namespace Plazza
 {
     class Reception
     {
         public:
-            Reception();
+            class ReceptionException : public std::exception {
+                public:
+                ReceptionException(const std::string &what) : message(what) {}
+                virtual ~ReceptionException() = default;
+                const char *what() const noexcept override { return message.c_str(); }
+                private:
+                    std::string message;
+            };
+            Reception() = default;
             ~Reception();
-            void start();
-            void stop();
-            void addOrder(const std::string &order);
-            void processOrders();
+            int run();
+            void addKitchen(pid_t pid);
+            void createKitchen();
 
         private:
-            bool _running;
-            std::vector<std::string> _orders;
+            bool _running = false;
+            std::vector<pid_t> _kitchens;
+            std::unique_ptr<int> _status = nullptr;
     };
 }
 

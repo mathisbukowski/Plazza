@@ -10,6 +10,8 @@
 
 #include <iostream>
 
-namespace Plazza {};
+namespace Plazza {
+    class Tools;
+};
 
 #endif /* !PLAZZA_HPP_ */
