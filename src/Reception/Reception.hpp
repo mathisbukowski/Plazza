@@ -11,6 +11,7 @@
 #include "plazza.hpp"
 #include <vector>
 #include <memory>
+#include "Tools/ForkEntity.hpp"
 
 namespace Plazza
 {
@@ -28,12 +29,12 @@ namespace Plazza
             Reception() = default;
             ~Reception();
             int run();
-            void addKitchen(pid_t pid);
+            void addKitchen(std::unique_ptr<ForkEntity> entity);
             void createKitchen();
 
         private:
             bool _running = false;
-            std::vector<pid_t> _kitchens;
+            std::vector<std::unique_ptr<ForkEntity>> _kitchens;
             std::unique_ptr<int> _status = nullptr;
     };
 }

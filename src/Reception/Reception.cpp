@@ -5,7 +5,8 @@
 ** Reception
 */
 
-#include "Tools/Tools.hpp"
+#include "Reception.hpp"
+
 #include "Reception.hpp"
 
 namespace Plazza {
@@ -13,19 +14,22 @@ namespace Plazza {
     {
         if (_running)
             return;
-        for (auto kitchen : _kitchens) {
-            if (kitchen == -1)
-                continue;
-            if (Tools::toolWaitPid(kitchen, _status) == -1)
-                std::cerr << "Error while waiting for kitchen process" << std::endl;
+
+        for (const auto& kitchen : _kitchens) {
+            try {
+                int status = kitchen->waitChild();
+                std::cout << "Kitchen exited with status: " << status << std::endl;
+            } catch (const std::exception& e) {
+                std::cerr << "Error while waiting for kitchen: " << e.what() << std::endl;
+            }
         }
         _kitchens.clear();
         _running = false;
     }
 
-    void Reception::addKitchen(pid_t pid)
+    void Reception::addKitchen(std::unique_ptr<ForkEntity> entity)
     {
-        this->_kitchens.emplace_back(pid);
+        _kitchens.emplace_back(std::move(entity));
     }
 
     int Reception::run()
@@ -42,13 +46,12 @@ namespace Plazza {
 
     void Reception::createKitchen()
     {
-        pid_t newKitchen = Tools::toolFork();
+        auto forkEntity = std::make_unique<ForkEntity>();
 
-        if (newKitchen == -1)
-            throw ReceptionException("Error while forking new kitchen");
-        if (newKitchen == 0)
-            throw ReceptionException("Error while forking new kitchen: already in child process");
-        this->addKitchen(newKitchen);
+        if (forkEntity->isChild()) {
+            // Code Enfant
+        }
+        this->addKitchen(std::move(forkEntity));
     }
 
 
