@@ -13,6 +13,7 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include "ICookTask.hpp"
 
 namespace Plazza {
     class ThreadPool {
@@ -20,7 +21,7 @@ namespace Plazza {
             explicit ThreadPool(size_t threadCount);
             ~ThreadPool();
 
-            void enqueueTask(const std::function<void()>& task);
+            void enqueueTask(std::shared_ptr<ICookTask> task);
             void stop();
         private:
             void workerLoop();

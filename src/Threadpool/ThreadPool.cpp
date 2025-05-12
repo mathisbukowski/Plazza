@@ -29,10 +29,12 @@ namespace Plazza {
         _condition.notify_all();
     }
 
-    void ThreadPool::enqueueTask(const std::function<void()>& task) {
+    void ThreadPool::enqueueTask(std::shared_ptr<ICookTask> task) {
         {
-            std::unique_lock<std::mutex> lock(_queueMutex);
-            _tasks.push(task);
+            std::lock_guard<std::mutex> lock(_queueMutex);
+            _tasks.push([task]() {
+                task->execute();
+            });
         }
         _condition.notify_one();
     }

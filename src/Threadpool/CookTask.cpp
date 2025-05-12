@@ -32,7 +32,7 @@ namespace Plazza {
         }
     }
 
-    void CookTask::operator()() const {
+    void CookTask::execute() {
         int baseTime = getBaseCookTime(_pizza.getType());
         int actualTimeMs = static_cast<int>(baseTime * _multiplier * 1000);
 

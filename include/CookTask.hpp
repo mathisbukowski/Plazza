@@ -9,12 +9,13 @@
 #define COOKTASK_HPP_
 
 #include "../src/Pizza/PizzaType.hpp"
+#include "ICookTask.hpp"
 
 namespace Plazza {
-    class CookTask {
+    class CookTask : public ICookTask {
         public:
             CookTask(const Pizza& pizza, double multiplier);
-            void operator()() const;
+            void execute() override;
 
         private:
             const Pizza& _pizza;
