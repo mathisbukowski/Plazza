@@ -28,9 +28,6 @@ namespace Plazza {
                 if (pid == -1) {
                     std::cerr << "Fork failed!" << std::endl;
                     std::exit(EXIT_FAILURE);
-                } else if (pid == 0) {
-                    std::cout << "You are in the child process!" << std::endl;
-                    return 0;
                 }
                 return pid;
             }
