@@ -1,0 +1,7 @@
+title: Plazza
+description: Plazza is a Epitech C++ project that implements a multi-threaded server and client system for processing tasks in parallel.
+files:
+  - "*.hpp"
+  - "**/*.hpp"
+  - "*.h"
+  - "**/*.h"
