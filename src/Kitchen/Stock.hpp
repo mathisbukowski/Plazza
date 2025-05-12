@@ -12,9 +12,6 @@ namespace Plazza {
     class Stock{
         public:
             Stock();
-            Stock(int numberDough, int numberTomato, int numberGruyere,
-                  int numberHam, int numberMushrooms, int numberSteaks,
-                  int numberEggplant, int numberGoatCheese, int numberChiefLove);
         Stock(const Stock &other);
         ~Stock();
         Stock &operator=(const Stock &other);

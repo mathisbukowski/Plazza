@@ -9,15 +9,15 @@
 
 Plazza::Stock::Stock()
 {
-    _numberDough = 0;
-    _numberTomato = 0;
-    _numberGruyere = 0;
-    _numberHam = 0;
-    _numberMushrooms = 0;
-    _numberSteaks = 0;
-    _numberEggplant = 0;
-    _numberGoatCheese = 0;
-    _numberChiefLove = 0;
+    _numberDough = 5;
+    _numberTomato = 5;
+    _numberGruyere = 5;
+    _numberHam = 5;
+    _numberMushrooms = 5;
+    _numberSteaks = 5;
+    _numberEggplant = 5;
+    _numberGoatCheese = 5;
+    _numberChiefLove = 5;
 }
 
 Plazza::Stock::Stock(const Plazza::Stock &other)
@@ -31,20 +31,6 @@ Plazza::Stock::Stock(const Plazza::Stock &other)
     _numberEggplant = other._numberEggplant;
     _numberGoatCheese = other._numberGoatCheese;
     _numberChiefLove = other._numberChiefLove;
-}
-
-Plazza::Stock::Stock(int numberDough, int numberTomato, int numberGruyere, int numberHam, int numberMushrooms,
-    int numberSteaks, int numberEggplant, int numberGoatCheese, int numberChiefLove)
-{
-    _numberDough = numberDough;
-    _numberTomato = numberTomato;
-    _numberGruyere = numberGruyere;
-    _numberHam = numberHam;
-    _numberMushrooms = numberMushrooms;
-    _numberSteaks = numberSteaks;
-    _numberEggplant = numberEggplant;
-    _numberGoatCheese = numberGoatCheese;
-    _numberChiefLove = numberChiefLove;
 }
 
 Plazza::Stock::~Stock()
