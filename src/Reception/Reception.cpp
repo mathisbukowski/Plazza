@@ -35,13 +35,27 @@ namespace Plazza {
     int Reception::run()
     {
         _running = true;
-        try {
-            this->createKitchen();
-        } catch (const ReceptionException& e) {
-            std::cerr << "Reception Error: " << e.what() << std::endl;
-            return 84;
+        std::string input;
+
+        std::cout << "Pizza Plazza> ";
+
+        while (std::getline(std::cin, input)) {
+            if (input == "exit" || input == "quit")
+                break;
+            try {
+                this->handleInput(input);
+            } catch (const ReceptionException &e) {
+                std::cerr << "Error: " << e.what() << std::endl;
+            }
         }
         return 0;
+    }
+
+    void handleInput(const std::string& input)
+    {
+        if (input.empty())
+            return;
+        auto commands =
     }
 
     void Reception::createKitchen()

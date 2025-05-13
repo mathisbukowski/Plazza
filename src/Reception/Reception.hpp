@@ -11,6 +11,8 @@
 #include "plazza.hpp"
 #include <vector>
 #include <memory>
+
+#include "Parser.hpp"
 #include "Tools/ForkEntity.hpp"
 
 namespace Plazza
@@ -31,11 +33,13 @@ namespace Plazza
             int run();
             void addKitchen(std::unique_ptr<ForkEntity> entity);
             void createKitchen();
+            void handleInput(const std::string& input);
 
         private:
             bool _running = false;
             std::vector<std::unique_ptr<ForkEntity>> _kitchens;
             std::unique_ptr<int> _status = nullptr;
+            std::shared_ptr<Parser> _parser = std::make_shared<Parser>();
     };
 }
 
