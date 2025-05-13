@@ -7,8 +7,11 @@
 
 #include <iostream>
 
+#include "Reception/Reception.hpp"
+
 int main()
 {
-    std::cout << "Hello World!" << std::endl;
-    return 0;
+    Plazza::Reception reception;
+
+    reception.run();
 }
