@@ -11,18 +11,22 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-
+#include "Stock.hpp"
 
 namespace Plazza {
     class Kitchen {
         public:
-            Kitchen();
+            Kitchen(const Kitchen &other);
+            Kitchen(int numberOfCooks, int timeToRestock);
             ~Kitchen();
             void start();
             void stop();
         private:
-            std::mutex _mutex;
-            std::thread _thread;
+            int _numberOfCooks;
+            int _numberOfPizzas;
+            Stock _stock;
+            bool _running;
+            int _timeToRestock;
     };
 }
 
