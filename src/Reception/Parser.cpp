@@ -43,8 +43,16 @@ namespace Plazza {
 
         if (pizzaType.empty() || pizzaSize.empty() || pizzaCount.empty())
             throw ParserException("Invalid command format");
+        Command command;
 
-        return Command(pizzaType, pizzaSize, pizzaCount);
+        try {
+            command.pizzaSize = command.stringToPizzaSize(pizzaSize);
+            command.pizzaType = command.stringToPizzaType(pizzaType);
+            command.numberOfPizzasNeeded = command.parseQuantity(pizzaCount);
+        } catch (const std::invalid_argument& e) {
+            throw ParserException(e.what());
+        }
+        return command;
     }
 
 
