@@ -59,10 +59,4 @@ namespace Plazza {
 
         return quantity;
     }
-
-    Command::Command(const std::string& pizzaType, const std::string& pizzaSize, const std::string& numberOfPizzas):
-    pizzaSize(this->stringToPizzaSize(pizzaSize)),
-    pizzaType(this->stringToPizzaType(pizzaType)),
-    numberOfPizzasNeeded(this->parseQuantity(numberOfPizzas)) {}
-
 }

@@ -13,7 +13,7 @@
 namespace Plazza {
     class Command {
     public:
-        Command(const std::string& pizzaType, const std::string& pizzaSize, const std::string& numberOfPizzas);
+        Command() = default;
 
         PizzaType stringToPizzaType(const std::string& pizzaString);
         PizzaSize stringToPizzaSize(const std::string& pizzaString);
