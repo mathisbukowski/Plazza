@@ -12,7 +12,7 @@
 
 namespace Plazza {
     PosixQueue::PosixQueue(const std::string& name, bool create, size_t maxMsgSize):
-    _name(name), _created(create), _maxMsgSize(maxMsgSize), _queue(-1)
+    _name(name), _queue(-1), _maxMsgSize(maxMsgSize), _created(create)
     {
         mq_attr attr = {};
         attr.mq_msgsize = maxMsgSize;
@@ -60,7 +60,8 @@ namespace Plazza {
 
         if (bytesRead == -1)
             throw std::runtime_error("Failed to receive message" + std::string(strerror(errno)));
-        return std::string(buffer.data(), bytesRead);
+        std::string message = std::string(buffer.data(), bytesRead);
+        return message;
     }
 
 
