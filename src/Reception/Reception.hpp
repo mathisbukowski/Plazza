@@ -34,6 +34,7 @@ namespace Plazza
             void addKitchen(std::unique_ptr<ForkEntity> entity);
             void createKitchen();
             void handleInput(const std::string& input);
+            void handleStatus();
 
         private:
             bool _running = false;

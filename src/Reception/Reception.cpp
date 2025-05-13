@@ -37,11 +37,16 @@ namespace Plazza {
         _running = true;
         std::string input;
 
-        std::cout << "Pizza Plazza> ";
-
-        while (std::getline(std::cin, input)) {
+        while (true) {
+            std::cout << "Pizza Plazza> ";
+            if (!std::getline(std::cin, input))
+                break;
             if (input == "exit" || input == "quit")
                 break;
+            if (!_running)
+                break;
+            if (input == "status")
+                this->handleStatus();
             try {
                 this->handleInput(input);
             } catch (const ReceptionException &e) {
@@ -51,11 +56,19 @@ namespace Plazza {
         return 0;
     }
 
-    void handleInput(const std::string& input)
+    void Reception::handleInput(const std::string& input)
     {
         if (input.empty())
             return;
-        auto commands =
+        std::vector<Command> commands;
+        try {
+            commands = _parser->parse(input);
+        } catch (const Parser::ParserException &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return;
+        }
+        if (commands.empty())
+            throw ReceptionException("Error parsing commands.");
     }
 
     void Reception::createKitchen()
@@ -66,6 +79,11 @@ namespace Plazza {
             // Code Enfant
         }
         this->addKitchen(std::move(forkEntity));
+    }
+
+    void Reception::handleStatus()
+    {
+        std::cout << "Pizza Plazza" << std::endl;
     }
 
 
