@@ -15,6 +15,7 @@ namespace Plazza {
         Stock(const Stock &other);
         ~Stock();
         Stock &operator=(const Stock &other);
+        void restockAll(void);
         void addDough(int number);
         void addTomato(int number);
         void addGruyere(int number);

@@ -53,6 +53,19 @@ Plazza::Stock &Plazza::Stock::operator=(const Plazza::Stock &other)
     return *this;
 }
 
+void Plazza::Stock::restockAll()
+{
+    this->addDough(1);
+    this->addTomato(1);
+    this->addGruyere(1);
+    this->addHam(1);
+    this->addMushrooms(1);
+    this->addSteaks(1);
+    this->addEggplant(1);
+    this->addGoatCheese(1);
+    this->addChiefLove(1);
+}
+
 void Plazza::Stock::addDough(int number)
 {
     _numberDough += number;
