@@ -28,8 +28,12 @@ namespace Plazza {
         }
         std::vector<Command> commands;
         for (const auto& line : lines) {
-            auto command = this->parseCommand(line);
-            commands.push_back(command);
+            try {
+                auto command = this->parseCommand(line);
+                commands.push_back(command);
+            } catch (const ParserException& e) {
+                throw ParserException(e.what());
+            }
         }
         return commands;
     }
