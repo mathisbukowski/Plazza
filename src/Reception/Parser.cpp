@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "Command.hpp"
+#include "Tools/ResultException.hpp"
 
 // Example of parsing = regina XXL x2; fantasia M x3; margarita S x1
 
@@ -28,12 +29,13 @@ namespace Plazza {
         }
         std::vector<Command> commands;
         for (const auto& line : lines) {
-            try {
-                auto command = this->parseCommand(line);
-                commands.push_back(command);
-            } catch (const ParserException& e) {
-                throw ParserException(e.what());
-            }
+            auto command = handleExceptions([&](const std::string& str) {
+                return this->parseCommand(str);
+            }, line);
+            if (command.hasValue())
+                commands.push_back(command.getValue());
+            else
+                throw ParserException(command.getErrorMessage());
         }
         return commands;
     }

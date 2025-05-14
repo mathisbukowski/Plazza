@@ -7,7 +7,8 @@
 
 #include "Reception.hpp"
 
-#include "Reception.hpp"
+#include "Tools/ResultException.hpp"
+
 
 namespace Plazza {
     Reception::~Reception()
@@ -61,12 +62,13 @@ namespace Plazza {
         if (input.empty())
             return;
         std::vector<Command> commands;
-        try {
-            commands = _parser->parse(input);
-        } catch (const Parser::ParserException &e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            return;
-        }
+        auto resultCommands = handleExceptions([&](const std::string& str) {
+            return _parser->parse(str);
+        }, input);
+        if (resultCommands.hasValue())
+            commands = resultCommands.getValue();
+        else
+            throw ReceptionException(resultCommands.getErrorMessage());
         if (commands.empty())
             throw ReceptionException("Error parsing commands.");
     }
