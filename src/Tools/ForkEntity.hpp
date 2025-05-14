@@ -10,6 +10,7 @@
 
 #include <sys/types.h>
 #include <optional>
+#include <string>
 
 namespace Plazza {
     class ForkEntity {
@@ -25,6 +26,15 @@ namespace Plazza {
 
         int waitChild();
         [[nodiscard]] std::optional<int> getExitStatus() const;
+
+        class ForkEntityException : public std::exception {
+        public:
+            ForkEntityException(const std::string &message): _message(message) {}
+            ~ForkEntityException() = default;
+            [[nodiscard]] const char *what() const noexcept override { return _message.c_str(); }
+        private:
+            std::string _message;
+        };
 
     private:
         pid_t _parentPid;

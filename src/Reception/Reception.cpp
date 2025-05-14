@@ -19,7 +19,7 @@ namespace Plazza {
             try {
                 int status = kitchen->waitChild();
                 std::cout << "Kitchen exited with status: " << status << std::endl;
-            } catch (const std::exception& e) {
+            } catch (const ForkEntity::ForkEntityException& e) {
                 std::cerr << "Error while waiting for kitchen: " << e.what() << std::endl;
             }
         }
@@ -73,8 +73,14 @@ namespace Plazza {
 
     void Reception::createKitchen()
     {
-        auto forkEntity = std::make_unique<ForkEntity>();
+        std::unique_ptr<ForkEntity> forkEntity = nullptr;
 
+        try {
+            forkEntity = std::make_unique<ForkEntity>();
+        } catch (const ForkEntity::ForkEntityException& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return;
+        }
         if (forkEntity->isChild()) {
             // Code Enfant
         }
