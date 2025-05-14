@@ -7,7 +7,8 @@
 
 #include "Reception.hpp"
 
-#include "Reception.hpp"
+#include "Tools/ResultException.hpp"
+
 
 namespace Plazza {
     Reception::~Reception()
@@ -19,7 +20,7 @@ namespace Plazza {
             try {
                 int status = kitchen->waitChild();
                 std::cout << "Kitchen exited with status: " << status << std::endl;
-            } catch (const std::exception& e) {
+            } catch (const ForkEntity::ForkEntityException& e) {
                 std::cerr << "Error while waiting for kitchen: " << e.what() << std::endl;
             }
         }
@@ -61,20 +62,27 @@ namespace Plazza {
         if (input.empty())
             return;
         std::vector<Command> commands;
-        try {
-            commands = _parser->parse(input);
-        } catch (const Parser::ParserException &e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            return;
-        }
+        auto resultCommands = handleExceptions([&](const std::string& str) {
+            return _parser->parse(str);
+        }, input);
+        if (resultCommands.hasValue())
+            commands = resultCommands.getValue();
+        else
+            throw ReceptionException(resultCommands.getErrorMessage());
         if (commands.empty())
             throw ReceptionException("Error parsing commands.");
     }
 
     void Reception::createKitchen()
     {
-        auto forkEntity = std::make_unique<ForkEntity>();
+        std::unique_ptr<ForkEntity> forkEntity = nullptr;
 
+        try {
+            forkEntity = std::make_unique<ForkEntity>();
+        } catch (const ForkEntity::ForkEntityException& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return;
+        }
         if (forkEntity->isChild()) {
             // Code Enfant
         }

@@ -16,7 +16,7 @@ namespace Plazza {
         : _parentPid(getpid()), _childPid(fork()), _exitStatus(std::nullopt)
     {
         if (_childPid < 0)
-            throw std::runtime_error("Fork failed");
+            throw ForkEntityException("Fork failed");
     }
 
     bool ForkEntity::isParent() const {
@@ -37,11 +37,11 @@ namespace Plazza {
 
     int ForkEntity::waitChild() {
         if (!isParent())
-            throw std::logic_error("Only parent can wait for child");
+            throw ForkEntityException("Only parent can wait for child");
 
         int status = 0;
         if (waitpid(_childPid, &status, 0) == -1)
-            throw std::runtime_error("waitpid failed");
+            throw ForkEntityException("waitpid failed");
 
         _exitStatus = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
         return *_exitStatus;
