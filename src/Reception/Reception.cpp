@@ -71,6 +71,7 @@ namespace Plazza {
             throw ReceptionException(resultCommands.getErrorMessage());
         if (commands.empty())
             throw ReceptionException("Error parsing commands.");
+        this->dispatchCommandsToKitchen(commands);
     }
 
     void Reception::createKitchen()
@@ -92,6 +93,11 @@ namespace Plazza {
     void Reception::handleStatus()
     {
         std::cout << "Pizza Plazza" << std::endl;
+    }
+
+    void Reception::dispatchCommandsToKitchen(std::vector<Command> commands)
+    {
+        (void)commands;
     }
 
 
