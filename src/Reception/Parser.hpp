@@ -10,7 +10,7 @@
 
 #include "plazza.hpp"
 #include <vector>
-#include "Command.hpp"
+#include "Order.hpp"
 
 namespace Plazza {
     /**
@@ -49,13 +49,13 @@ namespace Plazza {
          * @param input The input string to parse
          * @return A vector of Command objects
          */
-        std::vector<Command> parse(const std::string& input);
+        std::vector<Order> parse(const std::string& input);
         /**
          * Parse a command from a line.
          * @param line The line to parse
          * @return A Command object
          */
-        Command parseCommand(const std::string& line);
+        Order parseCommand(const std::string& line);
 
     };
 }

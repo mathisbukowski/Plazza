@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "Parser.hpp"
+#include "Pizza/PizzaType.hpp"
 #include "Tools/ForkEntity.hpp"
 
 namespace Plazza
@@ -85,7 +86,7 @@ namespace Plazza
              * dispatch commands to all kitchen
              * @param commands: array of commands to dispatch
              */
-            void dispatchCommandsToKitchen(std::vector<Command> commands);
+            void dispatchCommandsToKitchen(std::vector<Pizza> pizzas);
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running

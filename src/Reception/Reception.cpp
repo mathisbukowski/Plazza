@@ -7,6 +7,7 @@
 
 #include "Reception.hpp"
 
+#include "Factory/PizzaFactory.hpp"
 #include "Tools/ResultException.hpp"
 
 
@@ -61,17 +62,11 @@ namespace Plazza {
     {
         if (input.empty())
             return;
-        std::vector<Command> commands;
-        auto resultCommands = handleExceptions([&](const std::string& str) {
-            return _parser->parse(str);
-        }, input);
-        if (resultCommands.hasValue())
-            commands = resultCommands.getValue();
-        else
-            throw ReceptionException(resultCommands.getErrorMessage());
-        if (commands.empty())
+        PizzaFactory pizzaFactory;
+        std::vector<Pizza> pizzas = pizzaFactory.createPizzaFromString(input);
+        if (pizzas.empty())
             throw ReceptionException("Error parsing commands.");
-        this->dispatchCommandsToKitchen(commands);
+        this->dispatchCommandsToKitchen(pizzas);
     }
 
     void Reception::createKitchen()
@@ -95,9 +90,13 @@ namespace Plazza {
         std::cout << "Pizza Plazza" << std::endl;
     }
 
-    void Reception::dispatchCommandsToKitchen(std::vector<Command> commands)
+    void Reception::dispatchCommandsToKitchen(std::vector<Pizza> pizzas)
     {
-        (void)commands;
+        std::cout << "Dispatching " << pizzas.size() << " pizzas to kitchen(s)" << std::endl;
+        for (const auto& pizza : pizzas) {
+            std::cout << "Pizza: Type=" << static_cast<int>(pizza.getType())
+                      << " Size=" << static_cast<int>(pizza.getSize()) << std::endl;
+        }
     }
 
 

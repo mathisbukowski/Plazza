@@ -5,12 +5,12 @@
 ** 05
 */
 
-#include "Command.hpp"
+#include "Order.hpp"
 #include <algorithm>
 
 namespace Plazza {
 
-    PizzaType Command::stringToPizzaType(const std::string& pizzaString)
+    PizzaType Order::stringToPizzaType(const std::string& pizzaString)
     {
         std::string t = pizzaString;
         std::transform(t.begin(), t.end(), t.begin(), ::tolower);
@@ -26,7 +26,7 @@ namespace Plazza {
         throw std::invalid_argument("Invalid pizza type: " + pizzaString);
     }
 
-    PizzaSize Command::stringToPizzaSize(const std::string& pizzaString)
+    PizzaSize Order::stringToPizzaSize(const std::string& pizzaString)
     {
         std::string s = pizzaString;
         std::transform(s.begin(), s.end(), s.begin(), ::toupper);
@@ -44,7 +44,7 @@ namespace Plazza {
         throw std::invalid_argument("Invalid pizza size: " + pizzaString);
     }
 
-    int Command::parseQuantity(const std::string& quantityStr)
+    int Order::parseQuantity(const std::string& quantityStr)
     {
         if (quantityStr.size() < 2 || quantityStr[0] != 'x')
             throw std::invalid_argument("Invalid quantity format: " + quantityStr);
