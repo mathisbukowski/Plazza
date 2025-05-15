@@ -52,7 +52,8 @@ namespace Plazza
              * Reception constructor.
              * Initializes the reception with default values.
              */
-            Reception() = default;
+            Reception(const int& multiplier, const int& numberOfCooks, const int& timePerRestock):
+            _multiplierCookingTime(multiplier), _numberOfCooksPerKitchen(numberOfCooks), _timeToRestockIngredients(timePerRestock) {}
             /**
              * Reception Destructor.
              */
@@ -80,12 +81,20 @@ namespace Plazza
              * handle the status of the kitchens.
              */
             void handleStatus();
+            /**
+             * dispatch commands to all kitchen
+             * @param commands: array of commands to dispatch
+             */
+            void dispatchCommandsToKitchen(std::vector<Command> commands);
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running
             std::vector<std::unique_ptr<ForkEntity>> _kitchens; ///> Vector of kitchen entities
             std::unique_ptr<int> _status = nullptr; ///> Pointer to the status of the kitchens
             std::shared_ptr<Parser> _parser = std::make_shared<Parser>(); ///> Shared pointer to the parser
+            int _multiplierCookingTime = 0; ///> Int to represent the multiplier
+            int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
+            int _timeToRestockIngredients = 0; ///> time to Restock
     };
 }
 
