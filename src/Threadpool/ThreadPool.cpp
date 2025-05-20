@@ -5,8 +5,9 @@
 ** ThreadPool
 */
 
-#include "../../include/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 #include <mutex>
+#include <functional>
 
 namespace Plazza {
 
