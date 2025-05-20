@@ -79,6 +79,27 @@ namespace Plazza {
              */
             bool isOpen() const { return _queue != -1; }
 
+            template<typename T>
+            std::unique_ptr<T> receiveTypedMessage(unsigned int& priority) {
+                std::vector<char> buffer;
+                size_t sizeReceived;
+                if (!receiveBuffer(buffer, sizeReceived, priority))
+                    return nullptr;
+
+                if (sizeReceived < sizeof(MessageType))
+                    return nullptr;
+
+                MessageType type;
+                std::memcpy(&type, buffer.data(), sizeof(MessageType));
+
+                if (type != T().getType())
+                    return nullptr;
+
+                auto msg = std::make_unique<T>();
+                msg->deserialize(buffer.data(), sizeReceived);
+                return msg;
+            }
+
         private:
             /**
              * Sends a buffer to the queue.
