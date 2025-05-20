@@ -7,7 +7,6 @@
 
 #include "ThreadPool.hpp"
 #include <mutex>
-#include <functional>
 
 namespace Plazza {
 

@@ -10,8 +10,6 @@
 #include <cstring>
 #include <vector>
 
-#include "Factory/IpcMessageFactory.hpp"
-
 namespace Plazza {
     PosixQueue::PosixQueue(const std::string& name, bool create, mode_t mode)
     : _queue((mqd_t)-1), _name("/" + name), _created(create)
@@ -67,7 +65,7 @@ namespace Plazza {
             return nullptr;
         MessageType type;
         std::memcpy(&type, buffer.data(), sizeof(MessageType));
-        std::unique_ptr<Message> msg = IpcMessageFactory::create(type);
+        std::unique_ptr<Message> msg = nullptr;
         if (msg)
             msg->deserialize(buffer.data(), sizeReceived);
         return msg;
