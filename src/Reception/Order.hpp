@@ -12,17 +12,17 @@
 
 namespace Plazza {
     /**
-     * @class Command
+     * @class Order
      * Class representing a command for a pizza order.
      * It contains the type, size, and quantity of pizzas needed.
      * @note This class is used to parse and store the command information.
      */
-    class Command {
+    class Order {
     public:
         /**
          * Default constructor to initialize the command with default values.
          */
-        Command() = default;
+        Order() = default;
 
         /**
          * String to PizzaType conversion function.

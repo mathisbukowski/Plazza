@@ -10,60 +10,71 @@
 #include <cstring>
 #include <vector>
 
+#include "Factory/IpcMessageFactory.hpp"
+
 namespace Plazza {
-    PosixQueue::PosixQueue(const std::string& name, bool create, size_t maxMsgSize):
-    _name(name), _queue(-1), _maxMsgSize(maxMsgSize), _created(create)
+    PosixQueue::PosixQueue(const std::string& name, bool create, mode_t mode)
+    : _queue((mqd_t)-1), _name("/" + name), _created(create)
     {
-        mq_attr attr = {};
-        attr.mq_msgsize = maxMsgSize;
+        mq_attr attr{};
+        attr.mq_maxmsg = MAX_MESSAGES;
+        attr.mq_msgsize = MAX_MSG_SIZE;
         attr.mq_flags = 0;
-        attr.mq_maxmsg = 20;
 
-        int flags = O_RDWR;
-        if (create)
-            flags |= O_CREAT;
-        _queue = mq_open(name.c_str(), flags, 0644, create ? &attr : nullptr);
-        if (_queue == -1)
-            throw std::runtime_error("Failed to open message queue: " + std::string(strerror(errno)));
+        _queue = mq_open(_name.c_str(), (create ? O_CREAT : 0) | O_RDWR, mode, &attr);
+        if (_queue == (mqd_t)-1)
+            throw std::runtime_error("mq_open() failed for " + _name);
     }
 
-    PosixQueue::~PosixQueue()
-    {
-        this->closeQueue();
-        if (_created)
-            this->unlinkQueue();
-    }
-
-    void PosixQueue::closeQueue()
-    {
-        if (_queue != -1)
+    PosixQueue::~PosixQueue() {
+        if (_queue != (mqd_t)-1) {
             mq_close(_queue);
+            if (_created)
+                mq_unlink(_name.c_str());
+        }
     }
 
-    void PosixQueue::unlinkQueue()
-    {
-        mq_unlink(_name.c_str());
+    bool PosixQueue::sendBuffer(const std::vector<char>& buffer, unsigned int priority) {
+        if (_queue == (mqd_t)-1 || buffer.size() > MAX_MSG_SIZE)
+            return false;
+        return mq_send(_queue, buffer.data(), buffer.size(), priority) == 0;
     }
 
-    void PosixQueue::send(const std::string& message, unsigned int priority)
-    {
-        if (message.size() > _maxMsgSize)
-            throw std::runtime_error("Message is too big to send");
-        if (mq_send(_queue, message.c_str(), message.size(), priority) == -1)
-            throw std::runtime_error("Failed to send message" + std::string(strerror(errno)));
+    bool PosixQueue::receiveBuffer(std::vector<char>& buffer, size_t& sizeReceived, unsigned int& priority) {
+        buffer.resize(MAX_MSG_SIZE);
+        ssize_t received = mq_receive(_queue, buffer.data(), MAX_MSG_SIZE, &priority);
+        if (received < 0)
+            return false;
+        sizeReceived = static_cast<size_t>(received);
+        buffer.resize(sizeReceived);
+        return true;
     }
 
-    std::string PosixQueue::receive(std::unique_ptr<unsigned int> priority)
-    {
-        std::vector<char> buffer(_maxMsgSize);
-        ssize_t bytesRead = mq_receive(_queue, buffer.data(), _maxMsgSize, priority.get());
-
-        if (bytesRead == -1)
-            throw std::runtime_error("Failed to receive message" + std::string(strerror(errno)));
-        std::string message = std::string(buffer.data(), bytesRead);
-        return message;
+    bool PosixQueue::sendMessage(const std::unique_ptr<Message>& msg, unsigned int priority) {
+        std::vector<char> buffer(msg->getPackedSize());
+        size_t packedSize = 0;
+        msg->serialize(buffer.data(), packedSize);
+        buffer.resize(packedSize);
+        return sendBuffer(buffer, priority);
     }
 
+    std::unique_ptr<Message> PosixQueue::receiveMessage(unsigned int& priority) {
+        std::vector<char> buffer;
+        size_t sizeReceived;
+        if (!receiveBuffer(buffer, sizeReceived, priority))
+            return nullptr;
+        if (sizeReceived < sizeof(MessageType))
+            return nullptr;
+        MessageType type;
+        std::memcpy(&type, buffer.data(), sizeof(MessageType));
+        std::unique_ptr<Message> msg = IpcMessageFactory::create(type);
+        if (msg)
+            msg->deserialize(buffer.data(), sizeReceived);
+        return msg;
+    }
 
+    void PosixQueue::unlink(const std::string& name) {
+        mq_unlink(("/" + name).c_str());
+    }
 
 }

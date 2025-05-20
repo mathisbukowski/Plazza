@@ -8,13 +8,13 @@
 #include "Parser.hpp"
 #include <sstream>
 
-#include "Command.hpp"
+#include "Order.hpp"
 #include "Tools/ResultException.hpp"
 
 // Example of parsing = regina XXL x2; fantasia M x3; margarita S x1
 
 namespace Plazza {
-    std::vector<Command> Parser::parse(const std::string& input)
+    std::vector<Order> Parser::parse(const std::string& input)
     {
         if (input.empty())
             throw ParserException("Empty input string");
@@ -27,7 +27,7 @@ namespace Plazza {
             if (!command.empty())
                 lines.push_back(command);
         }
-        std::vector<Command> commands;
+        std::vector<Order> commands;
         for (const auto& line : lines) {
             auto command = handleExceptions([&](const std::string& str) {
                 return this->parseCommand(str);
@@ -40,7 +40,7 @@ namespace Plazza {
         return commands;
     }
 
-    Command Parser::parseCommand(const std::string& line)
+    Order Parser::parseCommand(const std::string& line)
     {
         std::stringstream ss(line);
         std::string pizzaType, pizzaSize, pizzaCount;
@@ -49,7 +49,7 @@ namespace Plazza {
 
         if (pizzaType.empty() || pizzaSize.empty() || pizzaCount.empty())
             throw ParserException("Invalid command format");
-        Command command;
+        Order command;
 
         try {
             command.pizzaSize = command.stringToPizzaSize(pizzaSize);
