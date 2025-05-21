@@ -7,19 +7,19 @@
 
 #ifndef ORDERBUILDER_HPP
 #define ORDERBUILDER_HPP
+#include <memory>
 #include "IBuilder.hpp"
 #include <vector>
-
-#include "Pizza/PizzaType.hpp"
+#include "Pizza/IPizza.hpp"
 #include "Reception/Order.hpp"
 
 namespace Plazza {
-    class OrderBuilder : IBuilder<std::vector<Pizza>> {
+    class OrderBuilder : IBuilder<std::vector<std::unique_ptr<IPizza>>> {
     public:
         explicit OrderBuilder(const Order& order):
         _order(order) {}
 
-        std::vector<Pizza> build() override;
+        std::vector<std::unique_ptr<IPizza>> build() override;
     private:
         Order _order;
     };
