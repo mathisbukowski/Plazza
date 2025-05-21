@@ -7,13 +7,14 @@
 
 #include "OrderBuilder.hpp"
 
+#include "Factory/PizzaFactory.hpp"
+
 namespace Plazza {
-    std::vector<Pizza> OrderBuilder::build()
+    std::vector<std::unique_ptr<IPizza>> OrderBuilder::build()
     {
-        std::vector<Pizza> pizzas;
-        for (int i = 0; i < _order.numberOfPizzasNeeded; i++) {
-            pizzas.emplace_back(_order.pizzaType, _order.pizzaSize);
-        }
+        std::vector<std::unique_ptr<IPizza>> pizzas;
+        for (int i = 0; i < _order.numberOfPizzasNeeded; ++i)
+            pizzas.push_back(PizzaFactory::createPizza(_order.pizzaType, _order.pizzaSize));
         return pizzas;
     }
 
