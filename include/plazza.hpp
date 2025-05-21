@@ -28,6 +28,14 @@ namespace Plazza {
         XL = 8,
         XXL = 16
     };
+    enum class MessageType {
+        UNDEFINED, ///> Undefined message type
+        COMMAND, ///> Order/Command message type
+        STATUS, ///> Status response message type
+        PIZZA_READY, ///> Pizza ready message type
+        KITCHEN_FULL, ///> Kitchen full message type
+        KITCHEN_CLOSING ///> Kitchen closing message type
+    };
 };
 
 #endif /* !PLAZZA_HPP_ */
