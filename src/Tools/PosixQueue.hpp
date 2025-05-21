@@ -9,6 +9,7 @@
 #define POSIXQUEUE_HPP
 
 
+#include <cstring>
 #include <memory>
 #include <mqueue.h>
 #include <vector>
@@ -16,6 +17,7 @@
 #include "Reception/Message.hpp"
 
 namespace Plazza {
+    enum class MessageType;
     /**
      * @class PosixQueue
      * Class responsible for managing a POSIX message queue.
@@ -45,22 +47,6 @@ namespace Plazza {
              * Delete the copy assignment operator to prevent copying
              */
             PosixQueue& operator=(const PosixQueue&) = delete;
-
-            /**
-             * Sends a message to the queue.
-             * @param msg The message to send
-             * @param priority The priority of the message
-             * @return True if the message was sent successfully, false otherwise
-             * @note The message must be a unique pointer to a Message object
-             */
-            bool sendMessage(const std::unique_ptr<Message>& msg, unsigned int priority = 0);
-            /**
-             * Receives a message from the queue.
-             * @param priority The priority of the received message
-             * @return A unique pointer to the received message
-             * @note The caller is responsible for deleting the message
-             */
-            std::unique_ptr<Message> receiveMessage(unsigned int& priority);
 
             /**
              * Unlinks the message queue.
@@ -98,6 +84,14 @@ namespace Plazza {
                 auto msg = std::make_unique<T>();
                 msg->deserialize(buffer.data(), sizeReceived);
                 return msg;
+            }
+
+            template<typename T>
+            bool sendTypedMessage(const T& message, unsigned int& priority = 0)
+            {
+                std::vector<char> buffer;
+                message.serialize(buffer);
+                return this->sendBuffer(buffer, priority);
             }
 
         private:

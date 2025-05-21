@@ -48,29 +48,6 @@ namespace Plazza {
         return true;
     }
 
-    bool PosixQueue::sendMessage(const std::unique_ptr<Message>& msg, unsigned int priority) {
-        std::vector<char> buffer(msg->getPackedSize());
-        size_t packedSize = 0;
-        msg->serialize(buffer.data(), packedSize);
-        buffer.resize(packedSize);
-        return sendBuffer(buffer, priority);
-    }
-
-    std::unique_ptr<Message> PosixQueue::receiveMessage(unsigned int& priority) {
-        std::vector<char> buffer;
-        size_t sizeReceived;
-        if (!receiveBuffer(buffer, sizeReceived, priority))
-            return nullptr;
-        if (sizeReceived < sizeof(MessageType))
-            return nullptr;
-        MessageType type;
-        std::memcpy(&type, buffer.data(), sizeof(MessageType));
-        std::unique_ptr<Message> msg = nullptr;
-        if (msg)
-            msg->deserialize(buffer.data(), sizeReceived);
-        return msg;
-    }
-
     void PosixQueue::unlink(const std::string& name) {
         mq_unlink(("/" + name).c_str());
     }
