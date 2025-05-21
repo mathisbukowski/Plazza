@@ -13,18 +13,18 @@
 #include "Tools/ResultException.hpp"
 
 namespace Plazza {
-    std::unique_ptr<IPizza> PizzaFactory::createPizza(PizzaType type, PizzaSize size)
+    std::shared_ptr<IPizza> PizzaFactory::createPizza(PizzaType type, PizzaSize size)
     {
         switch (type) {
-            case PizzaType::Margarita: return std::make_unique<Margarita>(size);
-            case PizzaType::Regina: return std::make_unique<Regina>(size);
-            case PizzaType::Americana: return std::make_unique<Americana>(size);
-            case PizzaType::Fantasia: return std::make_unique<Fantasia>(size);
+            case PizzaType::Margarita: return std::make_shared<Margarita>(size);
+            case PizzaType::Regina: return std::make_shared<Regina>(size);
+            case PizzaType::Americana: return std::make_shared<Americana>(size);
+            case PizzaType::Fantasia: return std::make_shared<Fantasia>(size);
             default: throw std::invalid_argument("Invalid pizza type");
         }
     }
 
-    std::vector<std::unique_ptr<IPizza>> PizzaFactory::createPizzaFromString(const std::string& input)
+    std::vector<std::shared_ptr<IPizza>> PizzaFactory::createPizzaFromString(const std::string& input)
     {
         Parser parser;
         std::vector<Order> orders;
@@ -32,7 +32,7 @@ namespace Plazza {
             return parser.parse(str);
         }, input);
 
-        std::vector<std::unique_ptr<IPizza>> queueOfPizzas;
+        std::vector<std::shared_ptr<IPizza>> queueOfPizzas;
 
         if (!resultOrders.hasValue())
             return queueOfPizzas;

@@ -15,8 +15,8 @@
 namespace Plazza {
     class PizzaFactory {
     public:
-        static std::unique_ptr<IPizza> createPizza(PizzaType type, PizzaSize size);
-        static std::vector<std::unique_ptr<IPizza>> createPizzaFromString(const std::string& input);
+        static std::shared_ptr<IPizza> createPizza(PizzaType type, PizzaSize size);
+        static std::vector<std::shared_ptr<IPizza>> createPizzaFromString(const std::string& input);
     };
 }
 

@@ -14,12 +14,12 @@
 #include "Reception/Order.hpp"
 
 namespace Plazza {
-    class OrderBuilder : IBuilder<std::vector<std::unique_ptr<IPizza>>> {
+    class OrderBuilder : IBuilder<std::vector<std::shared_ptr<IPizza>>> {
     public:
         explicit OrderBuilder(const Order& order):
         _order(order) {}
 
-        std::vector<std::unique_ptr<IPizza>> build() override;
+        std::vector<std::shared_ptr<IPizza>> build() override;
     private:
         Order _order;
     };
