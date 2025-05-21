@@ -8,12 +8,11 @@
 #ifndef RECEPTION_HPP_
 #define RECEPTION_HPP_
 
-#include "plazza.hpp"
 #include <vector>
 #include <memory>
 
 #include "Parser.hpp"
-#include "Pizza/PizzaType.hpp"
+#include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 
 namespace Plazza
@@ -84,9 +83,9 @@ namespace Plazza
             void handleStatus();
             /**
              * dispatch commands to all kitchen
-             * @param commands: array of commands to dispatch
+             * @param pizzas: array of commands to dispatch
              */
-            void dispatchCommandsToKitchen(std::vector<Pizza> pizzas);
+            void dispatchCommandsToKitchen(std::vector<IPizza> pizzas);
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running
