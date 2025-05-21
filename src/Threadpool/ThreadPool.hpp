@@ -14,8 +14,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
-#include "ICookTask.hpp"
 #include <atomic>
+#include "ICookTask.hpp"
 
 namespace Plazza {
     class ThreadPool {

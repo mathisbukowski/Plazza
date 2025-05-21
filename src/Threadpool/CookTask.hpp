@@ -8,17 +8,19 @@
 #ifndef COOKTASK_HPP_
 #define COOKTASK_HPP_
 
-#include "../src/Pizza/IPizza.hpp"
+#include <memory>
+
+#include "../Pizza/IPizza.hpp"
 #include "ICookTask.hpp"
 
 namespace Plazza {
     class CookTask : public ICookTask {
         public:
-            CookTask(const IPizza& pizza, double multiplier);
+            CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier);
             void execute() override;
 
         private:
-            const IPizza& _pizza;
+            const std::shared_ptr<IPizza>& _pizza;
             double _multiplier;
 
             int getBaseCookTime(PizzaType type) const;

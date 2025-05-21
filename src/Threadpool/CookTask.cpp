@@ -5,14 +5,14 @@
 ** CookTask
 */
 
-#include "../../include/CookTask.hpp"
+#include "CookTask.hpp"
 #include <chrono>
 #include <iostream>
 #include <thread>
 
 
 namespace Plazza {
-    CookTask::CookTask(const Pizza& pizza, double multiplier)
+    CookTask::CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier)
         : _pizza(pizza), _multiplier(multiplier)
     {}
 
@@ -33,11 +33,11 @@ namespace Plazza {
     }
 
     void CookTask::execute() {
-        int baseTime = getBaseCookTime(_pizza.getType());
+        int baseTime = getBaseCookTime(_pizza->getType());
         int actualTimeMs = static_cast<int>(baseTime * _multiplier * 1000);
 
-        std::cout << "Cooking pizza (type " << static_cast<int>(_pizza.getType())
-                      << ", size " << static_cast<int>(_pizza.getSize()) << ")...\n";
+        std::cout << "Cooking pizza (type " << static_cast<int>(_pizza->getType())
+                      << ", size " << static_cast<int>(_pizza->getSize()) << ")...\n";
 
         std::this_thread::sleep_for(std::chrono::milliseconds(actualTimeMs));
 
