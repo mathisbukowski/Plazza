@@ -64,7 +64,7 @@ namespace Plazza {
         if (input.empty())
             return;
         PizzaFactory pizzaFactory;
-        std::vector<Pizza> pizzas = pizzaFactory.createPizzaFromString(input);
+        auto pizzas = pizzaFactory.createPizzaFromString(input);
         if (pizzas.empty())
             throw ReceptionException("Error parsing commands.");
         this->dispatchCommandsToKitchen(pizzas);
@@ -91,7 +91,7 @@ namespace Plazza {
         std::cout << "Pizza Plazza" << std::endl;
     }
 
-    void Reception::dispatchCommandsToKitchen(std::vector<Pizza> pizzas)
+    void Reception::dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas)
     {
         int limitOfPizzas = this->_numberOfCooksPerKitchen * 2;
 
@@ -99,7 +99,7 @@ namespace Plazza {
         for (std::size_t i = 0; i < numKitchensNeeded; i++) {
             auto start = pizzas.begin() + i * limitOfPizzas;
             auto end = (i + 1) * limitOfPizzas < pizzas.size() ? start + limitOfPizzas : pizzas.end();
-            std::vector<Pizza> batch(start, end);
+            std::vector<std::shared_ptr<IPizza>> batch(start, end);
         }
     }
 

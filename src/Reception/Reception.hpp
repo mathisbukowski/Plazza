@@ -85,7 +85,7 @@ namespace Plazza
              * dispatch commands to all kitchen
              * @param pizzas: array of commands to dispatch
              */
-            void dispatchCommandsToKitchen(std::vector<IPizza> pizzas);
+            void dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas);
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running

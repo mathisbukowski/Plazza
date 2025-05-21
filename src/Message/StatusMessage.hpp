@@ -8,13 +8,11 @@
 #ifndef STATUSMESSAGE_HPP
 #define STATUSMESSAGE_HPP
 #include <vector>
-
-#include "IMessage.hpp"
 #include "plazza.hpp"
 #include "Kitchen/Stock.hpp"
 
 namespace Plazza {
-    class StatusMessage : {
+    class StatusMessage {
     public:
         StatusMessage() = default;
         ~StatusMessage() = default;

@@ -14,8 +14,6 @@
 #include <mqueue.h>
 #include <vector>
 
-#include "Reception/Message.hpp"
-
 namespace Plazza {
     enum class MessageType;
     /**

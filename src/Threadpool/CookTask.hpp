@@ -9,7 +9,7 @@
 #define COOKTASK_HPP_
 
 #include <memory>
-
+#include <vector>
 #include "../Pizza/IPizza.hpp"
 #include "ICookTask.hpp"
 
