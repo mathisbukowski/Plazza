@@ -9,28 +9,12 @@
 
 Plazza::Stock::Stock()
 {
-    _numberDough = 5;
-    _numberTomato = 5;
-    _numberGruyere = 5;
-    _numberHam = 5;
-    _numberMushrooms = 5;
-    _numberSteaks = 5;
-    _numberEggplant = 5;
-    _numberGoatCheese = 5;
-    _numberChiefLove = 5;
+    _ingredients.fill(5);
 }
 
 Plazza::Stock::Stock(const Plazza::Stock &other)
 {
-    _numberDough = other._numberDough;
-    _numberTomato = other._numberTomato;
-    _numberGruyere = other._numberGruyere;
-    _numberHam = other._numberHam;
-    _numberMushrooms = other._numberMushrooms;
-    _numberSteaks = other._numberSteaks;
-    _numberEggplant = other._numberEggplant;
-    _numberGoatCheese = other._numberGoatCheese;
-    _numberChiefLove = other._numberChiefLove;
+    _ingredients = other._ingredients;
 }
 
 Plazza::Stock::~Stock()
@@ -39,200 +23,34 @@ Plazza::Stock::~Stock()
 
 Plazza::Stock &Plazza::Stock::operator=(const Plazza::Stock &other)
 {
-    if (this != &other) {
-        _numberDough = other._numberDough;
-        _numberTomato = other._numberTomato;
-        _numberGruyere = other._numberGruyere;
-        _numberHam = other._numberHam;
-        _numberMushrooms = other._numberMushrooms;
-        _numberSteaks = other._numberSteaks;
-        _numberEggplant = other._numberEggplant;
-        _numberGoatCheese = other._numberGoatCheese;
-        _numberChiefLove = other._numberChiefLove;
-    }
+    if (this != &other)
+        _ingredients = other._ingredients;
     return *this;
 }
 
+
 void Plazza::Stock::restockAll()
 {
-    this->addDough(1);
-    this->addTomato(1);
-    this->addGruyere(1);
-    this->addHam(1);
-    this->addMushrooms(1);
-    this->addSteaks(1);
-    this->addEggplant(1);
-    this->addGoatCheese(1);
-    this->addChiefLove(1);
+    for (auto &i : _ingredients)
+        i++;
 }
 
-void Plazza::Stock::addDough(int number)
+void Plazza::Stock::add(Ingredient ing, int amount)
 {
-    _numberDough += number;
+    _ingredients[ing] += amount;
 }
 
-void Plazza::Stock::addTomato(int number)
+void Plazza::Stock::remove(Ingredient ing, int amount)
 {
-    _numberTomato += number;
+    _ingredients[ing] = std::max(0, _ingredients[ing] - amount);
 }
 
-void Plazza::Stock::addGruyere(int number)
+int Plazza::Stock::get(Ingredient ing) const
 {
-    _numberGruyere += number;
+    return _ingredients[ing];
 }
 
-void Plazza::Stock::addHam(int number)
+const std::array<int, Plazza::IngredientCount>& Plazza::Stock::getAll() const
 {
-    _numberHam += number;
-}
-
-void Plazza::Stock::addMushrooms(int number)
-{
-    _numberMushrooms += number;
-}
-
-void Plazza::Stock::addSteaks(int number)
-{
-    _numberSteaks += number;
-}
-
-void Plazza::Stock::addEggplant(int number)
-{
-    _numberEggplant += number;
-}
-
-void Plazza::Stock::addGoatCheese(int number)
-{
-    _numberGoatCheese += number;
-}
-
-void Plazza::Stock::addChiefLove(int number)
-{
-    _numberChiefLove += number;
-}
-
-void Plazza::Stock::removeDough(int number)
-{
-    if (_numberDough - number >= 0) {
-        _numberDough -= number;
-        return;
-    }
-    _numberDough = 0;
-}
-
-void Plazza::Stock::removeTomato(int number)
-{
-    if (_numberTomato - number >= 0) {
-        _numberTomato -= number;
-        return;
-    }
-    _numberTomato = 0;
-}
-
-void Plazza::Stock::removeGruyere(int number)
-{
-    if (_numberGruyere - number >= 0) {
-        _numberGruyere -= number;
-        return;
-    }
-    _numberGruyere = 0;
-}
-
-void Plazza::Stock::removeHam(int number)
-{
-    if (_numberHam - number >= 0) {
-        _numberHam -= number;
-        return;
-    }
-    _numberHam = 0;
-}
-
-void Plazza::Stock::removeMushrooms(int number)
-{
-    if (_numberMushrooms - number >= 0) {
-        _numberMushrooms -= number;
-        return;
-    }
-    _numberMushrooms = 0;
-}
-
-void Plazza::Stock::removeSteaks(int number)
-{
-    if (_numberSteaks - number >= 0) {
-        _numberSteaks -= number;
-        return;
-    }
-    _numberSteaks = 0;
-}
-
-void Plazza::Stock::removeEggplant(int number)
-{
-    if (_numberEggplant - number >= 0) {
-        _numberEggplant -= number;
-        return;
-    }
-    _numberEggplant = 0;
-}
-
-void Plazza::Stock::removeGoatCheese(int number)
-{
-    if (_numberGoatCheese - number >= 0) {
-        _numberGoatCheese -= number;
-        return;
-    }
-    _numberGoatCheese = 0;
-}
-
-void Plazza::Stock::removeChiefLove(int number)
-{
-    if (_numberChiefLove - number >= 0) {
-        _numberChiefLove -= number;
-        return;
-    }
-    _numberChiefLove = 0;
-}
-
-int Plazza::Stock::getNumberDough() const
-{
-    return _numberDough;
-}
-
-int Plazza::Stock::getNumberTomato() const
-{
-    return _numberTomato;
-}
-
-int Plazza::Stock::getNumberGruyere() const
-{
-    return _numberGruyere;
-}
-
-int Plazza::Stock::getNumberHam() const
-{
-    return _numberHam;
-}
-
-int Plazza::Stock::getNumberMushrooms() const
-{
-    return _numberMushrooms;
-}
-
-int Plazza::Stock::getNumberSteaks() const
-{
-    return _numberSteaks;
-}
-
-int Plazza::Stock::getNumberEggplant() const
-{
-    return _numberEggplant;
-}
-
-int Plazza::Stock::getNumberGoatCheese() const
-{
-    return _numberGoatCheese;
-}
-
-int Plazza::Stock::getNumberChiefLove() const
-{
-    return _numberChiefLove;
+    return _ingredients;
 }

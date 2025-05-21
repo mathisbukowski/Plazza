@@ -15,11 +15,13 @@
 
 
 namespace Plazza {
-    class OrderMessage : public Message {
+    class OrderMessage {
     public:
-        void serialize(std::vector<char>& buffer) const override;
-        void deserialize(const std::vector<char>& buffer) override;
-        size_t getPackedSize() const override;
+        OrderMessage() = default;
+        ~OrderMessage() = default;
+        void serialize(std::vector<char>& buffer) const;
+        void deserialize(const std::vector<char>& buffer);
+        size_t getPackedSize() const;
         std::vector<std::unique_ptr<IPizza>> _pizzas;
         MessageType _type;
     };
