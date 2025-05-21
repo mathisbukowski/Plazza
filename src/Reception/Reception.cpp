@@ -8,6 +8,7 @@
 #include "Reception.hpp"
 
 #include "Factory/PizzaFactory.hpp"
+#include "Kitchen/Kitchen.hpp"
 #include "Tools/ResultException.hpp"
 
 
@@ -92,10 +93,13 @@ namespace Plazza {
 
     void Reception::dispatchCommandsToKitchen(std::vector<Pizza> pizzas)
     {
-        std::cout << "Dispatching " << pizzas.size() << " pizzas to kitchen(s)" << std::endl;
-        for (const auto& pizza : pizzas) {
-            std::cout << "Pizza: Type=" << static_cast<int>(pizza.getType())
-                      << " Size=" << static_cast<int>(pizza.getSize()) << std::endl;
+        int limitOfPizzas = this->_numberOfCooksPerKitchen * 2;
+
+        std::size_t numKitchensNeeded = (pizzas.size() + limitOfPizzas - 1) / limitOfPizzas;
+        for (std::size_t i = 0; i < numKitchensNeeded; i++) {
+            auto start = pizzas.begin() + i * limitOfPizzas;
+            auto end = (i + 1) * limitOfPizzas < pizzas.size() ? start + limitOfPizzas : pizzas.end();
+            std::vector<Pizza> batch(start, end);
         }
     }
 
