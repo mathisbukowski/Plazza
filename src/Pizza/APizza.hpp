@@ -26,6 +26,7 @@ namespace Plazza {
          * @param ingredients : ingredients of a pizza with quantity
          */
         APizza(PizzaType type, PizzaSize size, int bakingTime, std::vector<std::string> ingredients);
+
         /**
          * Gets the size of the pizza
          * @return the pizza size

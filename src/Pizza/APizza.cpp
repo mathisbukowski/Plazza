@@ -9,7 +9,7 @@
 
 namespace Plazza {
     APizza::APizza(PizzaType type, PizzaSize size, int bakingTime, std::vector<std::string> ingredients):
-    _type(type), _size(size), _bakingTime(bakingTime), _ingredients(ingredients) {}
+    _size(size), _type(type), _bakingTime(bakingTime), _ingredients(std::move(ingredients)) {}
 
     PizzaSize APizza::getSize() const
     {
