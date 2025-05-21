@@ -8,14 +8,15 @@
 #ifndef PIZZAFACTORY_HPP
 #define PIZZAFACTORY_HPP
 
+#include <memory>
 #include <vector>
-
-#include "Pizza/PizzaType.hpp"
+#include "Pizza/IPizza.hpp"
 
 namespace Plazza {
     class PizzaFactory {
     public:
-        std::vector<Plazza::Pizza> createPizzaFromString(const std::string& input);
+        static std::unique_ptr<IPizza> createPizza(PizzaType type, PizzaSize size);
+        static std::vector<std::unique_ptr<IPizza>> createPizzaFromString(const std::string& input);
     };
 }
 
