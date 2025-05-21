@@ -12,7 +12,7 @@
 namespace Plazza {
     class Margarita : public APizza {
     public:
-        Margarita(PizzaSize size): APizza(PizzaType::MARGARITA, size, 1, {"dough", "tomato", "gruyere"}) {}
+        Margarita(PizzaSize size): APizza(PizzaType::Margarita, size, 1, {"dough", "tomato", "gruyere"}) {}
     };
 
     class Regina : public APizza {
