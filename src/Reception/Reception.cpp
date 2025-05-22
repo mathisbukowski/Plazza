@@ -63,8 +63,7 @@ namespace Plazza {
     {
         if (input.empty())
             return;
-        PizzaFactory pizzaFactory;
-        auto pizzas = pizzaFactory.createPizzaFromString(input);
+        auto pizzas = PizzaFactory::createPizzaFromString(input);
         if (pizzas.empty())
             throw ReceptionException("Error parsing commands.");
         this->dispatchCommandsToKitchen(pizzas);
