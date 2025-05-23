@@ -80,7 +80,10 @@ namespace Plazza {
             return;
         }
         if (forkEntity->isChild()) {
-            // Code Enfant
+            Kitchen kitchenChild(this->_numberOfCooksPerKitchen, this->_timeToRestockIngredients);
+
+            kitchenChild.start();
+            std::_Exit(0); // Not executed parent code
         }
         this->addKitchen(std::move(forkEntity));
     }
@@ -99,6 +102,7 @@ namespace Plazza {
             auto start = pizzas.begin() + i * limitOfPizzas;
             auto end = (i + 1) * limitOfPizzas < pizzas.size() ? start + limitOfPizzas : pizzas.end();
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
+            this->createKitchen();
         }
     }
 
