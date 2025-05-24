@@ -6,7 +6,7 @@
 */
 
 #include "Kitchen.hpp"
-
+#include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
 
 Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd)
@@ -71,6 +71,11 @@ void Plazza::Kitchen::start()
             _stock.restockAll();
         if (this->handleOrder())
             this->stop();
+        if (elapsedTime == 2)
+            if (!this->handleStatus()) {
+                std::cerr << "Failed to handle status" << std::endl;
+                this->stop();
+            }
     }
 }
 
@@ -78,4 +83,29 @@ void Plazza::Kitchen::stop()
 {
     _running = false;
     std::cout << "Kitchen shutting down" << std::endl;
+}
+
+bool Plazza::Kitchen::handleStatus() 
+{
+    StatusMessage statusMessage;
+    statusMessage.setType(MessageType::STATUS);
+    statusMessage._totalCooks = _numberOfCooks;
+    statusMessage._busyCooks = _numberOfPizzas;
+    statusMessage.setStock(_stock.getAll());
+    std::vector<char> buffer;
+    statusMessage.serialize(buffer);
+    uint32_t size = buffer.size();
+    ssize_t bytesWritten = write(_fd, &size, sizeof(size));
+    if (bytesWritten != sizeof(size)) {
+        std::cerr << "Failed to write size\n";
+        return false;
+    }
+    bytesWritten = write(_fd, buffer.data(), size);
+    if (bytesWritten != static_cast<ssize_t>(size)) {
+        std::cerr << "Failed to write full message\n";
+        return false;
+    }
+    std::cout << "Status sent: " << statusMessage.getTotalCooks() << " cooks, " 
+              << statusMessage.getBusyCooks() << " busy cooks." << std::endl;
+    return true;
 }

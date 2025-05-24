@@ -101,6 +101,8 @@ namespace Plazza
             int _timeToRestockIngredients = 0; ///> time to Restock
             std::vector<KitchenChannel> _kitchens;
 
+            void receiveStatusFromKitchen();
+
     };
 }
 

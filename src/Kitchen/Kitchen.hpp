@@ -45,6 +45,8 @@ namespace Plazza {
              * Stop the kitchen and end the restocking process.
              */
             void stop();
+
+            bool handleStatus();
         private:
             int _numberOfCooks; ///> Number of cooks in the kitchen
             int _numberOfPizzas; ///> Number of pizzas in the kitchen

@@ -11,6 +11,7 @@
 #include "Kitchen/Kitchen.hpp"
 #include "Message/OrderMessage.hpp"
 #include "Tools/ResultException.hpp"
+#include "Message/StatusMessage.hpp"
 
 
 namespace Plazza {
@@ -117,5 +118,46 @@ namespace Plazza {
         }
     }
 
+    void Reception::receiveStatusFromKitchen()
+    {
+        fd_set readFds;
+        FD_ZERO(&readFds);
+        int maxFd = 0;
+
+        for (const auto& kitchen : _kitchens) {
+            int fd = kitchen._pipe->getParentFd();
+            FD_SET(fd, &readFds);
+            if (fd > maxFd)
+                maxFd = fd;
+        }
+        timeval timeout = {1, 0};
+        int ret = select(maxFd + 1, &readFds, nullptr, nullptr, &timeout);
+        if (ret < 0) {
+                perror("select failed");
+            return;
+        }
+        if (ret == 0) {
+            std::cout << "No status received from kitchens." << std::endl;
+            return;
+        }
+        for (const auto& kitchen : _kitchens) {
+            int fd = kitchen._pipe->getParentFd();
+            if (FD_ISSET(fd, &readFds)) {
+                try {
+                    auto statusMessage = kitchen._pipe->receive<StatusMessage>(fd);
+                    std::cout << "Kitchen Status: " << std::endl;
+                    std::cout << "Total Cooks: " << statusMessage->getTotalCooks() << std::endl;
+                    std::cout << "Busy Cooks: " << statusMessage->getBusyCooks() << std::endl;
+                    std::cout << "Stock: ";
+                    for (int i = 0; i < IngredientCount; ++i) {
+                        std::cout << static_cast<Ingredient>(i) << ": " << statusMessage->getStock()[i] << " ";
+                    }
+                    std::cout << std::endl;
+                } catch (const std::runtime_error& e) {
+                    std::cerr << "Error receiving status: " << e.what() << std::endl;
+                }
+            }
+        }
+    }
 
 }
