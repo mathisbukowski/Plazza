@@ -7,6 +7,7 @@
 
 #include "Reception.hpp"
 
+#include "Build/OrderMessageBuilder.hpp"
 #include "Factory/PizzaFactory.hpp"
 #include "Kitchen/Kitchen.hpp"
 #include "Message/OrderMessage.hpp"
@@ -106,15 +107,17 @@ namespace Plazza {
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
 
-            OrderMessage msg;
-            msg.setType(MessageType::COMMAND);
-            msg.setPizzas(batch);
+            OrderMessageBuilder builder;
+            OrderMessage order = builder
+            .setType(MessageType::COMMAND)
+            .setPizzas(pizzas)
+            .build();
 
             std::vector<char> buffer;
-            msg.serialize(buffer);
+            order.serialize(buffer);
 
             int fd = kitchen._pipe->getParentFd();
-            kitchen._pipe->send(fd, msg);
+            kitchen._pipe->send(fd, order);
         }
     }
 
