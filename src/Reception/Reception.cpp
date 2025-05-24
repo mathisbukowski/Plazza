@@ -9,6 +9,7 @@
 
 #include "Factory/PizzaFactory.hpp"
 #include "Kitchen/Kitchen.hpp"
+#include "Message/OrderMessage.hpp"
 #include "Tools/ResultException.hpp"
 
 
@@ -20,7 +21,7 @@ namespace Plazza {
 
         for (const auto& kitchen : _kitchens) {
             try {
-                int status = kitchen->waitChild();
+                int status = kitchen._fork->waitChild();
                 std::cout << "Kitchen exited with status: " << status << std::endl;
             } catch (const ForkEntity::ForkEntityException& e) {
                 std::cerr << "Error while waiting for kitchen: " << e.what() << std::endl;
@@ -28,11 +29,6 @@ namespace Plazza {
         }
         _kitchens.clear();
         _running = false;
-    }
-
-    void Reception::addKitchen(std::unique_ptr<ForkEntity> entity)
-    {
-        _kitchens.emplace_back(std::move(entity));
     }
 
     int Reception::run()
@@ -71,7 +67,8 @@ namespace Plazza {
 
     void Reception::createKitchen()
     {
-        std::unique_ptr<ForkEntity> forkEntity = nullptr;
+        std::unique_ptr<ForkEntity> forkEntity;
+        std::unique_ptr<PipeChannel> pipeChannel = std::make_unique<PipeChannel>();
 
         try {
             forkEntity = std::make_unique<ForkEntity>();
@@ -79,13 +76,16 @@ namespace Plazza {
             std::cerr << "Error: " << e.what() << std::endl;
             return;
         }
-        if (forkEntity->isChild()) {
-            Kitchen kitchenChild(this->_numberOfCooksPerKitchen, this->_timeToRestockIngredients);
 
+        if (forkEntity->isChild()) {
+            pipeChannel->closeParentFd();
+            int fd = pipeChannel->getChildFd();
+            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, fd);
             kitchenChild.start();
-            std::_Exit(0); // Not executed parent code
+            std::_Exit(0);
         }
-        this->addKitchen(std::move(forkEntity));
+        pipeChannel->closeChildFd();
+        _kitchens.emplace_back(std::move(forkEntity), std::move(pipeChannel));
     }
 
     void Reception::handleStatus()
@@ -103,6 +103,19 @@ namespace Plazza {
             auto end = (i + 1) * limitOfPizzas < pizzas.size() ? start + limitOfPizzas : pizzas.end();
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
+            KitchenChannel& kitchen = _kitchens.back();
+
+            OrderMessage msg;
+            msg.setType(MessageType::COMMAND);
+            msg.setPizzas(batch);
+
+            std::vector<char> buffer;
+            msg.serialize(buffer);
+
+            uint32_t size = buffer.size();
+            int fd = kitchen._pipe->getParentFd();
+            write(fd, &size, sizeof(size));
+            write(fd, buffer.data(), size);
         }
     }
 
