@@ -20,6 +20,15 @@ namespace Plazza {
         void serialize(std::vector<char>& buffer) const;
         void deserialize(const std::vector<char>& buffer);
         size_t getPackedSize() const;
+
+        void setType(const MessageType& type) { _type = type; }
+
+        void setPizzas(const std::vector<std::shared_ptr<IPizza>> pizzas) { _pizzas = pizzas; }
+
+        std::vector<std::shared_ptr<IPizza>> getPizzas() const { return _pizzas; }
+
+        MessageType getType() const { return _type; }
+
         std::vector<std::shared_ptr<IPizza>> _pizzas;
         MessageType _type;
     };

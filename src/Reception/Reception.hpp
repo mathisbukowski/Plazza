@@ -8,15 +8,18 @@
 #ifndef RECEPTION_HPP_
 #define RECEPTION_HPP_
 
+#include <utility>
 #include <vector>
 #include <memory>
 
 #include "Parser.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
+#include "Tools/Pipe.hpp"
 
 namespace Plazza
 {
+    class PosixQueue;
     /**
      * @class Reception
      * Class responsible for managing the reception of orders and interacting with kitchens.
@@ -24,6 +27,13 @@ namespace Plazza
     class Reception
     {
         public:
+            class KitchenChannel {
+            public:
+                std::unique_ptr<ForkEntity> _fork;
+                std::unique_ptr<PipeChannel> _pipe;
+                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::unique_ptr<PipeChannel> _pipe):
+                _fork(std::move(_fork)), _pipe(std::move(_pipe)) {}
+            };
             /**
              * @class ReceptionException
              * Exception class for handling reception errors.
@@ -64,11 +74,6 @@ namespace Plazza
              */
             int run();
             /**
-             * Add a kitchen to the reception.
-             * @param entity The kitchen entity to add
-             */
-            void addKitchen(std::unique_ptr<ForkEntity> entity);
-            /**
              * create a new kitchen.
              */
             void createKitchen();
@@ -89,12 +94,13 @@ namespace Plazza
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running
-            std::vector<std::unique_ptr<ForkEntity>> _kitchens; ///> Vector of kitchen entities
             std::unique_ptr<int> _status = nullptr; ///> Pointer to the status of the kitchens
             std::shared_ptr<Parser> _parser = std::make_shared<Parser>(); ///> Shared pointer to the parser
             int _multiplierCookingTime = 0; ///> Int to represent the multiplier
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
+            std::vector<KitchenChannel> _kitchens;
+
     };
 }
 
