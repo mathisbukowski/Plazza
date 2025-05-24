@@ -34,8 +34,10 @@ namespace Plazza {
             std::vector<char> buffer;
             message.serialize(buffer);
             uint32_t size = buffer.size();
-            ::write(fd, &size, sizeof(size));
-            ::write(fd, buffer.data(), buffer.size());
+            if (::write(fd, &size, sizeof(size)) == -1)
+                throw std::runtime_error("write failed");
+            if (::write(fd, buffer.data(), buffer.size()) == -1)
+                throw std::runtime_error("write failed");
         }
 
         template<typename T>
@@ -53,6 +55,8 @@ namespace Plazza {
             message->deserialize(buffer);
             return message;
         }
+
+        void writeInChannel(int& fd, std::vector<char> data);
     private:
         int _fds[2];
 

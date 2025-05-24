@@ -112,10 +112,8 @@ namespace Plazza {
             std::vector<char> buffer;
             msg.serialize(buffer);
 
-            uint32_t size = buffer.size();
             int fd = kitchen._pipe->getParentFd();
-            write(fd, &size, sizeof(size));
-            write(fd, buffer.data(), size);
+            kitchen._pipe->send(fd, msg);
         }
     }
 
