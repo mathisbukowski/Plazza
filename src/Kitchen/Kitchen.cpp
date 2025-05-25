@@ -30,43 +30,58 @@ Plazza::Kitchen::~Kitchen()
 {
 }
 
-bool Plazza::Kitchen::handleOrder(const std::vector<char>& buffer)
+bool Plazza::Kitchen::handleOrder()
 {
     uint32_t size = 0;
     ssize_t bytesRead = read(_fd, &size, sizeof(size));
     if (bytesRead != sizeof(size))
-        return true;
+        return false;
     std::vector<char> buffer(size);
     bytesRead = read(_fd, buffer.data(), size);
     if (bytesRead != static_cast<ssize_t>(size))
-        return true;
+        return false;
     OrderMessage msg;
     msg.deserialize(buffer);
     auto pizzas = msg.getPizzas();
-    return false;
+    return true;
 }
 
 void Plazza::Kitchen::start()
 {
     auto startTime = std::chrono::steady_clock::now();
+    auto lastStatusTime = startTime;
+    auto lastRestockTime = startTime;
+
+    const int STATUS_INTERVAL_MS = 1000;
 
     std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
-    while (_running) {
-        auto currentTime = std::chrono::steady_clock::now();
-        auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-        auto elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
 
-        if (elapsedTime >= 5)
+    while (_running) {
+        auto now = std::chrono::steady_clock::now();
+
+        auto elapsedTimeSec = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
+        if (elapsedTimeSec >= 5)
             this->stop();
-        if (elapsedTimeMs >= _timeToRestock)
+
+        auto elapsedRestockMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRestockTime).count();
+        if (elapsedRestockMs >= _timeToRestock) {
             _stock.restockAll();
-        if (this->handleOrder())
-            this->stop();
-        if (!this->handleStatus()) {
-            std::cerr << "Failed to handle status" << std::endl;
+            lastRestockTime = now;
         }
+        auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
+        if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
+            if (!this->handleStatus()) {
+                std::cerr << "Failed to send status." << std::endl;
+                this->stop();
+            }
+            lastStatusTime = now;
+        }
+        if (handleOrder())
+            this->stop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
+
 
 void Plazza::Kitchen::stop()
 {

@@ -38,7 +38,11 @@ namespace Plazza {
              * Default destructor for the kitchen.
              */
             ~Kitchen();
-            bool handleOrder(const std::vector<char>& buffer);
+            /**
+             * Handle order messages
+             * @return true if ok
+             */
+            bool handleOrder();
             /**
              * Start the kitchen and begin the restocking process.
              */
@@ -54,12 +58,6 @@ namespace Plazza {
              * @return True if the status was handled successfully, false otherwise.
              */
             bool handleStatus();
-            /**
-             * Handle messages from the reception.
-             * This method processes incoming messages and performs actions based on their type.
-             * @return True if the message was handled successfully, false otherwise.
-             */
-            bool handleMessage();
         private:
             int _numberOfCooks; ///> Number of cooks in the kitchen
             int _numberOfPizzas; ///> Number of pizzas in the kitchen
@@ -67,6 +65,7 @@ namespace Plazza {
             bool _running; ///> Flag to indicate if the kitchen is running
             int _timeToRestock; ///> Time to restock the kitchen
             int _fd; ///> Fd of the kitchen for communication
+            static constexpr  int STATUS_INTERVAL_MS = 1000; ///> Interval of status sending
     };
 }
 
