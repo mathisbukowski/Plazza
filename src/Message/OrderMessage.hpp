@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include "Pizza/IPizza.hpp"
+#include "IMessage.hpp"
 
 
 namespace Plazza {
@@ -17,7 +18,7 @@ namespace Plazza {
      * @class OrderMessage
      * Class representing an order message in the Plazza system.
      */
-    class OrderMessage {
+    class OrderMessage : public IMessage {
     public:
         /**
          * Default constructor for OrderMessage.
@@ -33,18 +34,18 @@ namespace Plazza {
          * @param buffer The buffer to serialize the message into
          * This method converts the message type and pizzas into a binary format for transmission.
          */
-        void serialize(std::vector<char>& buffer) const;
+        void serialize(std::vector<char>& buffer) const override;
         /**
          * Deserializes the OrderMessage from a buffer.
          * @param buffer The buffer to deserialize the message from
          * This method reconstructs the message type and pizzas from the binary format.
          */
-        void deserialize(const std::vector<char>& buffer);
+        void deserialize(const std::vector<char>& buffer) override;
         /**
          * Gets the packed size of the OrderMessage.
          * @return The size of the serialized message in bytes
          */
-        size_t getPackedSize() const;
+        size_t getPackedSize() const override;
         /**
          * Sets the type of the order message.
          * @param type The type of the message

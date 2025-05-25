@@ -10,6 +10,7 @@
 #include <vector>
 #include "plazza.hpp"
 #include "Kitchen/Stock.hpp"
+#include "IMessage.hpp"
 
 namespace Plazza {
     /**
@@ -17,7 +18,7 @@ namespace Plazza {
      * Class representing a status message in the Plazza system.
      * It contains information about the kitchen's status, including the number of cooks and stock levels.
      */
-    class StatusMessage {
+    class StatusMessage : public IMessage {
     public:
         /**
          * Default constructor for StatusMessage.
@@ -33,19 +34,19 @@ namespace Plazza {
          * @param buffer The buffer to serialize the message into
          * This method converts the message type, total cooks, busy cooks, and stock into a binary format for transmission.
          */
-        void serialize(std::vector<char>& buffer) const;
+        void serialize(std::vector<char>& buffer) const override;
         /**
          * Deserializes the StatusMessage from a buffer.
          * @param buffer The buffer to deserialize the message from
          * This method reconstructs the message type, total cooks, busy cooks, and stock from the binary format.
          */
-        void deserialize(const std::vector<char>& buffer);
+        void deserialize(const std::vector<char>& buffer) override;
         /**
          * Gets the packed size of the StatusMessage.
          * @return The size of the serialized message in bytes
          * This method calculates the total size required to store the message type, total cooks, busy cooks, and stock.
          */
-        size_t getPackedSize() const;
+        size_t getPackedSize() const override;
         /**
          * Sets the type of the status message.
          * @param type The type of the message
