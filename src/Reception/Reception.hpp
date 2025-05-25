@@ -13,6 +13,8 @@
 #include <memory>
 
 #include "Parser.hpp"
+#include "Event/EventLoop.hpp"
+#include "Kitchen/Stock.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 #include "Tools/Pipe.hpp"
@@ -30,9 +32,16 @@ namespace Plazza
             class KitchenChannel {
             public:
                 std::unique_ptr<ForkEntity> _fork;
-                std::unique_ptr<PipeChannel> _pipe;
-                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::unique_ptr<PipeChannel> _pipe):
+                std::shared_ptr<PipeChannel> _pipe;
+                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::shared_ptr<PipeChannel> _pipe):
                 _fork(std::move(_fork)), _pipe(std::move(_pipe)) {}
+            };
+
+            class KitchenStatus {
+            public:
+                int _totalCooks = 0;
+                int _busyCooks = 0;
+                std::array<int, IngredientCount> _stock{};
             };
             /**
              * @class ReceptionException
@@ -100,7 +109,8 @@ namespace Plazza
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
             std::vector<KitchenChannel> _kitchens;
-
+            EventLoop _pollLoop;
+            std::vector<KitchenStatus> _latestStatuses;
             void receiveStatusFromKitchen();
 
     };

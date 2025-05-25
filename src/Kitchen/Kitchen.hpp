@@ -11,6 +11,8 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <vector>
+
 #include "Stock.hpp"
 
 namespace Plazza {
@@ -36,7 +38,7 @@ namespace Plazza {
              * Default destructor for the kitchen.
              */
             ~Kitchen();
-            bool handleOrder();
+            bool handleOrder(const std::vector<char>& buffer);
             /**
              * Start the kitchen and begin the restocking process.
              */
@@ -47,6 +49,8 @@ namespace Plazza {
             void stop();
 
             bool handleStatus();
+
+            bool handleMessage();
         private:
             int _numberOfCooks; ///> Number of cooks in the kitchen
             int _numberOfPizzas; ///> Number of pizzas in the kitchen

@@ -8,6 +8,7 @@
 #include "Reception.hpp"
 
 #include "Build/OrderMessageBuilder.hpp"
+#include "Event/SelectablePipe.hpp"
 #include "Factory/PizzaFactory.hpp"
 #include "Kitchen/Kitchen.hpp"
 #include "Message/OrderMessage.hpp"
@@ -16,6 +17,7 @@
 
 
 namespace Plazza {
+
     Reception::~Reception()
     {
         if (_running)
@@ -46,13 +48,18 @@ namespace Plazza {
                 break;
             if (!_running)
                 break;
-            if (input == "status")
+            if (input == "status") {
                 this->handleStatus();
+                continue;
+            }
+
             try {
                 this->handleInput(input);
             } catch (const ReceptionException &e) {
                 std::cerr << "Error: " << e.what() << std::endl;
             }
+
+            _pollLoop.pollOnce(100);
         }
         return 0;
     }
@@ -69,8 +76,8 @@ namespace Plazza {
 
     void Reception::createKitchen()
     {
+        auto pipe = std::make_shared<PipeChannel>();
         std::unique_ptr<ForkEntity> forkEntity;
-        std::unique_ptr<PipeChannel> pipeChannel = std::make_unique<PipeChannel>();
 
         try {
             forkEntity = std::make_unique<ForkEntity>();
@@ -80,86 +87,70 @@ namespace Plazza {
         }
 
         if (forkEntity->isChild()) {
-            pipeChannel->closeParentFd();
-            int fd = pipeChannel->getChildFd();
-            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, fd);
+            pipe->closeParentFd();
+            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe->getChildFd());
             kitchenChild.start();
             std::_Exit(0);
         }
-        pipeChannel->closeChildFd();
-        _kitchens.emplace_back(std::move(forkEntity), std::move(pipeChannel));
+
+        pipe->closeChildFd();
+        _latestStatuses.emplace_back();
+        auto selectable = std::make_shared<SelectablePipe>(
+            pipe,
+            [this, pipe, idx = _latestStatuses.size()]() mutable {
+                try {
+                    auto status = pipe->receive<StatusMessage>(pipe->getParentFd());
+                    KitchenStatus ks;
+                    ks._totalCooks = status->getTotalCooks();
+                    ks._busyCooks = status->getBusyCooks();
+                    std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
+                    _latestStatuses[idx] = std::move(ks);
+                } catch (const std::exception& e) {
+                    std::cerr << "Receive error: " << e.what() << std::endl;
+                }
+            }
+        );
+
+
+        _pollLoop.addSelectable(selectable);
+        _kitchens.emplace_back(std::move(forkEntity), pipe);
     }
 
     void Reception::handleStatus()
     {
-        std::cout << "Pizza Plazza" << std::endl;
+        std::cout << "Requesting status from all kitchens..." << std::endl;
+        for (auto& kitchen : _kitchens) {
+            OrderMessage msg;
+            msg.setType(MessageType::STATUS);
+            kitchen._pipe->send(kitchen._pipe->getParentFd(), msg);
+        }
+        std::cout << "Status of kitchen :\n";
+        for (size_t i = 0; i < _latestStatuses.size(); ++i) {
+            auto& status = _latestStatuses[i];
+            std::cout << "Kitchen #" << i << "\n";
+            std::cout << "  Total Cooks: " << status._totalCooks << "\n";
+            std::cout << "  Busy Cooks: " << status._busyCooks << "\n";
+            std::cout << "  Stock: ";
+            for (int j = 0; j < IngredientCount; ++j)
+                std::cout << static_cast<Ingredient>(j) << ": " << status._stock[j] << " ";
+            std::cout << "\n";
+        }
     }
 
     void Reception::dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas)
     {
-        int limitOfPizzas = this->_numberOfCooksPerKitchen * 2;
-
+        int limitOfPizzas = _numberOfCooksPerKitchen * 2;
         std::size_t numKitchensNeeded = (pizzas.size() + limitOfPizzas - 1) / limitOfPizzas;
-        for (std::size_t i = 0; i < numKitchensNeeded; i++) {
+
+        for (std::size_t i = 0; i < numKitchensNeeded; ++i) {
             auto start = pizzas.begin() + i * limitOfPizzas;
             auto end = (i + 1) * limitOfPizzas < pizzas.size() ? start + limitOfPizzas : pizzas.end();
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
-
             OrderMessageBuilder builder;
-            OrderMessage order = builder
-            .setType(MessageType::COMMAND)
-            .setPizzas(pizzas)
-            .build();
-
-            std::vector<char> buffer;
-            order.serialize(buffer);
-
-            int fd = kitchen._pipe->getParentFd();
-            kitchen._pipe->send(fd, order);
-        }
-    }
-
-    void Reception::receiveStatusFromKitchen()
-    {
-        fd_set readFds;
-        FD_ZERO(&readFds);
-        int maxFd = 0;
-
-        for (const auto& kitchen : _kitchens) {
-            int fd = kitchen._pipe->getParentFd();
-            FD_SET(fd, &readFds);
-            if (fd > maxFd)
-                maxFd = fd;
-        }
-        timeval timeout = {1, 0};
-        int ret = select(maxFd + 1, &readFds, nullptr, nullptr, &timeout);
-        if (ret < 0) {
-                perror("select failed");
-            return;
-        }
-        if (ret == 0) {
-            std::cout << "No status received from kitchens." << std::endl;
-            return;
-        }
-        for (const auto& kitchen : _kitchens) {
-            int fd = kitchen._pipe->getParentFd();
-            if (FD_ISSET(fd, &readFds)) {
-                try {
-                    auto statusMessage = kitchen._pipe->receive<StatusMessage>(fd);
-                    std::cout << "Kitchen Status: " << std::endl;
-                    std::cout << "Total Cooks: " << statusMessage->getTotalCooks() << std::endl;
-                    std::cout << "Busy Cooks: " << statusMessage->getBusyCooks() << std::endl;
-                    std::cout << "Stock: ";
-                    for (int i = 0; i < IngredientCount; ++i) {
-                        std::cout << static_cast<Ingredient>(i) << ": " << statusMessage->getStock()[i] << " ";
-                    }
-                    std::cout << std::endl;
-                } catch (const std::runtime_error& e) {
-                    std::cerr << "Error receiving status: " << e.what() << std::endl;
-                }
-            }
+            OrderMessage order = builder.setType(MessageType::COMMAND).setPizzas(batch).build();
+            kitchen._pipe->send(kitchen._pipe->getParentFd(), order);
         }
     }
 
