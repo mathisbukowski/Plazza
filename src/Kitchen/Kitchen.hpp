@@ -11,6 +11,8 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <vector>
+
 #include "Stock.hpp"
 
 namespace Plazza {
@@ -36,6 +38,10 @@ namespace Plazza {
              * Default destructor for the kitchen.
              */
             ~Kitchen();
+            /**
+             * Handle order messages
+             * @return true if ok
+             */
             bool handleOrder();
             /**
              * Start the kitchen and begin the restocking process.
@@ -45,6 +51,13 @@ namespace Plazza {
              * Stop the kitchen and end the restocking process.
              */
             void stop();
+            /**
+             * Handle status requests from the reception.
+             * This method sends the current status of the kitchen, including the number of cooks
+             * and the stock of ingredients.
+             * @return True if the status was handled successfully, false otherwise.
+             */
+            bool handleStatus();
         private:
             int _numberOfCooks; ///> Number of cooks in the kitchen
             int _numberOfPizzas; ///> Number of pizzas in the kitchen
@@ -52,6 +65,7 @@ namespace Plazza {
             bool _running; ///> Flag to indicate if the kitchen is running
             int _timeToRestock; ///> Time to restock the kitchen
             int _fd; ///> Fd of the kitchen for communication
+            static constexpr  int STATUS_INTERVAL_MS = 1000; ///> Interval of status sending
     };
 }
 

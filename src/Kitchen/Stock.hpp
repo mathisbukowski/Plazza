@@ -48,15 +48,36 @@ namespace Plazza {
              * @return True if the stocks are equal, false otherwise
              */
             Stock &operator=(const Stock &other);
-
+            /**
+             * Restocks all ingredients to their default values.
+             */
             void restockAll();
+            /**
+             * Adds a specified amount of an ingredient to the stock.
+             * @param ing The ingredient to add
+             * @param amount The amount to add
+             */
             void add(Ingredient ing, int amount);
+            /**
+             * Removes a specified amount of an ingredient from the stock.
+             * @param ing The ingredient to remove
+             * @param amount The amount to remove
+             */
             void remove(Ingredient ing, int amount);
+            /**
+             * Checks if the stock has enough of a specified ingredient.
+             * @param ing The ingredient to check
+             * @param amount The amount to check for
+             * @return True if there is enough of the ingredient, false otherwise
+             */
             int get(Ingredient ing) const;
-
+            /**
+             * Gets the current stock of all ingredients.
+             * @return A constant reference to an array containing the quantities of all ingredients
+             */
             const std::array<int, IngredientCount> &getAll() const;
     private:
-        std::array<int, IngredientCount> _ingredients;
+        std::array<int, IngredientCount> _ingredients; ///> Array to hold the quantities of each ingredient
     };
 }
 

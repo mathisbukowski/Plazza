@@ -15,19 +15,48 @@
 
 
 namespace Plazza {
+    /**
+     * @class PipeChannel
+     * Class responsible
+     * for managing a pipe channel for inter-process communication.
+     */
     class PipeChannel {
     public:
+        /**
+         * Default constructor for PipeChannel.
+         * Initializes the pipe and sets up the file descriptors.
+         */
         PipeChannel();
+        /**
+         * Destructor for PipeChannel.
+         */
         ~PipeChannel();
-
+        /**
+         * Gets the file descriptor for the parent end of the pipe.
+         * @return The file descriptor for the parent end of the pipe
+         */
         int getParentFd() const;
-
+        /**
+         * Gets the file descriptor for the child end of the pipe.
+         * @return The file descriptor for the child end of the pipe
+         */
         int getChildFd() const;
-
+        /**
+         * Closes the parent file descriptor.
+         * This method should be called when the parent process is done using the pipe.
+         */
         void closeParentFd();
-
+        /**
+         * Closes the child file descriptor.
+         * This method should be called when the child process is done using the pipe.
+         */
         void closeChildFd();
-
+        /**
+         * sends a message through the pipe.
+         * @param fd The file descriptor to send the message through
+         * @param message The message to send
+         * @tparam T The type of the message, which must implement serialize and deserialize methods
+         */
         template<typename T>
         void send(int fd, const T& message)
         {
@@ -39,7 +68,12 @@ namespace Plazza {
             if (::write(fd, buffer.data(), buffer.size()) == -1)
                 throw std::runtime_error("write failed");
         }
-
+        /**
+         * Receives a message from the pipe.
+         * @param fd The file descriptor to receive the message from
+         * @return A shared pointer to the received message of type T
+         * @tparam T The type of the message, which must implement serialize and deserialize methods
+         */
         template<typename T>
         std::shared_ptr<T> receive(int fd)
         {
@@ -55,12 +89,17 @@ namespace Plazza {
             message->deserialize(buffer);
             return message;
         }
-
+        /**
+         * Writes data to the specified file descriptor.
+         * @param fd The file descriptor to write to
+         * @param data The data to write
+         * This method writes the data to the specified file descriptor.
+         */
         void writeInChannel(int& fd, std::vector<char> data);
     private:
-        int _fds[2];
+        int _fds[2]; ///> Array to hold the file descriptors for the pipe
 
-        void closeIfOpen(int& fd);
+        void closeIfOpen(int& fd); ///> Closes the file descriptor if it is open
     };
 }
 

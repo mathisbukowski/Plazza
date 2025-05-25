@@ -13,6 +13,8 @@
 #include <memory>
 
 #include "Parser.hpp"
+#include "Event/EventLoop.hpp"
+#include "Kitchen/Stock.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 #include "Tools/Pipe.hpp"
@@ -27,12 +29,32 @@ namespace Plazza
     class Reception
     {
         public:
+            /**
+             * @class KitchenChannel
+             * Class representing a channel to communicate with a kitchen.
+             */
             class KitchenChannel {
             public:
-                std::unique_ptr<ForkEntity> _fork;
-                std::unique_ptr<PipeChannel> _pipe;
-                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::unique_ptr<PipeChannel> _pipe):
+                std::unique_ptr<ForkEntity> _fork; ///> Unique pointer to the fork entity for process management
+                std::shared_ptr<PipeChannel> _pipe; ///> Shared pointer to the pipe channel for communication
+                /**
+                 * Constructor for KitchenChannel.
+                 * @param _fork Unique pointer to the fork entity
+                 * @param _pipe Shared pointer to the pipe channel
+                 * Initializes the kitchen channel with the provided fork and pipe.
+                 */
+                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::shared_ptr<PipeChannel> _pipe):
                 _fork(std::move(_fork)), _pipe(std::move(_pipe)) {}
+            };
+            /**
+             * @class KitchenStatus
+             * Class representing the status of a kitchen.
+             */
+            class KitchenStatus {
+            public:
+                int _totalCooks = 0; ///> Total number of cooks in the kitchen
+                int _busyCooks = 0; ///> Number of busy cooks
+                std::array<int, IngredientCount> _stock{}; ///> Array to hold stock quantities of ingredients
             };
             /**
              * @class ReceptionException
@@ -99,7 +121,10 @@ namespace Plazza
             int _multiplierCookingTime = 0; ///> Int to represent the multiplier
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
-            std::vector<KitchenChannel> _kitchens;
+            std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels
+            EventLoop _pollLoop; ///> Event loop for handling events
+            std::vector<KitchenStatus> _latestStatuses; ///> Vector to store the latest statuses of kitchens
+            void receiveStatusFromKitchen(); ///> Function to receive status from kitchens
 
     };
 }
