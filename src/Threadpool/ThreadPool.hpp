@@ -18,21 +18,46 @@
 #include "ICookTask.hpp"
 
 namespace Plazza {
+    /**
+     * @class ThreadPool
+     * Class representing a thread pool for executing cooking tasks concurrently.
+     * It manages a pool of worker threads that can execute tasks in parallel.
+     */
     class ThreadPool {
         public:
+            /**
+             * Constructor for ThreadPool.
+             * Initializes the thread pool with a specified number of threads.
+             * @param threadCount The number of threads in the pool
+             */
             explicit ThreadPool(size_t threadCount);
+            /**
+             * Destructor for ThreadPool.
+             * Cleans up the thread pool and stops all worker threads.
+             */
             ~ThreadPool();
-
+            /**
+             * Enqueues a cooking task to be executed by the thread pool.
+             * @param task A shared pointer to the cooking task to be executed
+             */
             void enqueueTask(std::shared_ptr<ICookTask> task);
+            /**
+             * Stops the thread pool and joins all worker threads.
+             * This method should be called to cleanly shut down the thread pool.
+             */
             void stop();
         private:
+            /**
+             * Worker loop function for each thread in the pool.
+             * It continuously waits for tasks to be enqueued and executes them.
+             */
             void workerLoop();
 
-            std::vector<std::thread> _workers;
-            std::queue<std::function<void()>> _tasks;
-            std::mutex _queueMutex;
-            std::condition_variable _condition;
-            std::atomic<bool> _stop;
+            std::vector<std::thread> _workers; ///> Vector of worker threads in the pool
+            std::queue<std::function<void()>> _tasks; ///> Queue of tasks to be executed by the workers
+            std::mutex _queueMutex; ///> Mutex to protect access to the task queue
+            std::condition_variable _condition; ///> Condition variable to notify workers when tasks are available
+            std::atomic<bool> _stop; ///> Atomic flag to indicate whether the thread pool is stopping
     };
 }
 
