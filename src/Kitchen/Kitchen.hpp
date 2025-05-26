@@ -12,6 +12,8 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include "../Threadpool/ThreadPool.hpp"
+#include "../Threadpool/CookTask.hpp"
 
 #include "Stock.hpp"
 
@@ -65,6 +67,8 @@ namespace Plazza {
             bool _running; ///> Flag to indicate if the kitchen is running
             int _timeToRestock; ///> Time to restock the kitchen
             int _fd; ///> Fd of the kitchen for communication
+            std::unique_ptr<ThreadPool> _threadPool;
+            double _multiplier;
             static constexpr  int STATUS_INTERVAL_MS = 1000; ///> Interval of status sending
     };
 }

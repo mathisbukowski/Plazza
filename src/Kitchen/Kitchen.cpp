@@ -16,6 +16,8 @@ Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd)
     _running = true;
     _timeToRestock = timeToRestock;
     _fd = fd;
+    _threadPool = std::make_unique<ThreadPool>(numberOfCooks);
+    _multiplier = 1.0;
 }
 
 Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
@@ -43,6 +45,17 @@ bool Plazza::Kitchen::handleOrder()
     OrderMessage msg;
     msg.deserialize(buffer);
     auto pizzas = msg.getPizzas();
+
+    for (const auto & pizza : pizzas) {
+        if (_numberOfPizzas >= 2 * _numberOfCooks) {
+            std::cout << "Kitchen full, cannot accept more pizzas\n";
+            return false;
+        }
+        auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
+        _threadPool->enqueueTask(cookTask);
+        _numberOfPizzas++;
+        std::cout << "Pizza added to cooking queue\n";
+    }
     return true;
 }
 
