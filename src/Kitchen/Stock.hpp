@@ -8,6 +8,8 @@
 #ifndef PLAZZA_STOCK_HPP
 #define PLAZZA_STOCK_HPP
 #include <array>
+#include <memory>
+#include "../Pizza/IPizza.hpp"
 
 namespace Plazza {
     enum Ingredient {
@@ -76,6 +78,25 @@ namespace Plazza {
              * @return A constant reference to an array containing the quantities of all ingredients
              */
             const std::array<int, IngredientCount> &getAll() const;
+            /**
+            * Checks if the stock has enough ingredients for a specific pizza.
+            * @param pizza The pizza to check ingredients for
+            * @return True if there are enough ingredients, false otherwise
+            */
+            bool hasIngredientsFor(const std::shared_ptr<IPizza>& pizza) const;
+
+            /**
+            * Consumes the ingredients needed for a specific pizza.
+            * @param pizza The pizza to consume ingredients for
+            * @return True if ingredients were consumed successfully, false otherwise
+            */
+            bool consumeIngredientsFor(const std::shared_ptr<IPizza>& pizza);
+            /**
+             * Converts a string representation of an ingredient to its enum value.
+             * @param ingredientName The name of the ingredient as a string
+             * @return The corresponding Ingredient enum value
+             */
+            Ingredient stringToIngredient(const std::string& ingredientName) const;
     private:
         std::array<int, IngredientCount> _ingredients; ///> Array to hold the quantities of each ingredient
     };

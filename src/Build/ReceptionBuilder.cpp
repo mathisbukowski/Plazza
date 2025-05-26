@@ -25,9 +25,26 @@ namespace Plazza {
         return static_cast<int>(val);
     }
 
+    static int safeStrToDouble(const std::string &str)
+    {
+        errno = 0;
+        char *end = nullptr;
+        double val = std::strtod(str.c_str(), &end);
+
+        if (errno == ERANGE || val < -DBL_MAX || val > DBL_MAX) {
+            throw std::out_of_range("Double value out of range: " + str);
+        }
+
+        if (end == str.c_str() || *end != '\0') {
+            throw std::invalid_argument("Invalid double value: " + str);
+        }
+
+        return static_cast<int>(val);
+    }
+
     ReceptionBuilder& ReceptionBuilder::setMultiplier(const std::string& multiplier)
     {
-        _multiplier = safeStrToInt(multiplier);
+        _multiplier = safeStrToDouble(multiplier);
         return *this;
     }
 
