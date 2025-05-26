@@ -88,7 +88,7 @@ namespace Plazza {
 
         if (forkEntity->isChild()) {
             pipe->closeParentFd();
-            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe->getChildFd());
+            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe->getChildFd(), _multiplierCookingTime);
             kitchenChild.start();
             std::_Exit(0);
         }

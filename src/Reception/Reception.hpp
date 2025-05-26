@@ -84,7 +84,7 @@ namespace Plazza
              * Reception constructor.
              * Initializes the reception with default values.
              */
-            Reception(const int& multiplier, const int& numberOfCooks, const int& timePerRestock):
+            Reception(const double& multiplier, const int& numberOfCooks, const int& timePerRestock):
             _multiplierCookingTime(multiplier), _numberOfCooksPerKitchen(numberOfCooks), _timeToRestockIngredients(timePerRestock) {}
             /**
              * Reception Destructor.
@@ -118,7 +118,7 @@ namespace Plazza
             bool _running = false; ///> Flag to indicate if the reception is running
             std::unique_ptr<int> _status = nullptr; ///> Pointer to the status of the kitchens
             std::shared_ptr<Parser> _parser = std::make_shared<Parser>(); ///> Shared pointer to the parser
-            int _multiplierCookingTime = 0; ///> Int to represent the multiplier
+            double _multiplierCookingTime = 0; ///> Int to represent the multiplier
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
             std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels

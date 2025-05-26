@@ -10,6 +10,7 @@
 
 #include "IBuilder.hpp"
 #include "Reception/Reception.hpp"
+#include <cfloat>
 
 namespace Plazza {
     /**
@@ -44,7 +45,7 @@ namespace Plazza {
         std::shared_ptr<Reception> build() override;
 
     private:
-        int _multiplier = 0; ///> The multiplier for the cooking time, default is 0.
+        double _multiplier = 0; ///> The multiplier for the cooking time, default is 0.
         int _numberOfCooks = 0; ///> The number of cooks in the reception, default is 0.
         int _timePerRestock = 0; ///> The time in seconds for restocking ingredients, default is 0.
     };
