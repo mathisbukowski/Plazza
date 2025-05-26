@@ -28,5 +28,12 @@ namespace Plazza {
     {
         return _ingredients;
     }
-
+    void APizza::setIsCooked(const bool isCooked)
+    {
+        _isPizzaCooked = isCooked;
+    }
+    bool APizza::isCooked() const
+    {
+        return _isPizzaCooked;
+    }
 }

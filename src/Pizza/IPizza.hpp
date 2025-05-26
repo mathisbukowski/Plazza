@@ -42,6 +42,8 @@ namespace Plazza
              * @return a vector of ingredients
              */
             virtual std::vector<std::string> getIngredients() const = 0;
+
+            virtual bool isCooked() const = 0;
     };
 }
 

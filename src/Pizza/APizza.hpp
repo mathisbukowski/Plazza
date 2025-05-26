@@ -47,11 +47,16 @@ namespace Plazza {
          * @return ingredients with quantity
          */
         std::vector<std::string> getIngredients() const override;
+
+        bool isCooked() const override;
+
+        void setIsCooked(const bool isCooked);
     private:
         PizzaSize _size; ///> Size of the pizza
         PizzaType _type; ///> Type of the pizza
         int _bakingTime; ///> Baking time of a pizza
         std::vector<std::string> _ingredients; ///> Ingredients of a pizza
+        bool _isPizzaCooked = false;
     };
 }
 
