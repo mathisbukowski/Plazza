@@ -9,6 +9,7 @@
 #define PIZZATYPE_HPP_
 
 #include "plazza.hpp"
+#include <vector>
 
 namespace Plazza
 {
