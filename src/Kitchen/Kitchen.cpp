@@ -9,7 +9,7 @@
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
 
-Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd)
+Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
 {
     _numberOfCooks = numberOfCooks;
     _numberOfPizzas = 0;
@@ -17,7 +17,7 @@ Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd)
     _timeToRestock = timeToRestock;
     _fd = fd;
     _threadPool = std::make_unique<ThreadPool>(numberOfCooks);
-    _multiplier = 1.0;
+    _multiplier = multiplier;
 }
 
 Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
