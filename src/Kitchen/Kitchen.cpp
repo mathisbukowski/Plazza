@@ -24,6 +24,7 @@ Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
     _numberOfPizzas = other._numberOfPizzas;
     _running = other._running;
     _timeToRestock = other._timeToRestock;
+    _fd = other._fd;
 }
 
 Plazza::Kitchen::~Kitchen()
