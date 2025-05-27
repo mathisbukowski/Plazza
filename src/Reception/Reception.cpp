@@ -46,6 +46,8 @@ namespace Plazza {
                 break;
             if (input == "exit" || input == "quit")
                 break;
+            if (input.empty())
+                continue;
             if (!_running)
                 break;
             if (input == "status") {
@@ -88,7 +90,7 @@ namespace Plazza {
 
         if (forkEntity->isChild()) {
             pipe->closeParentFd();
-            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe->getChildFd(), _multiplierCookingTime);
+            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe, _multiplierCookingTime);
             kitchenChild.start();
             std::_Exit(0);
         }
