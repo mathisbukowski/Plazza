@@ -101,12 +101,6 @@ namespace Plazza {
             pipe,
             [this, pipe, idx = _latestStatuses.size()]() mutable {
                 try {
-                    auto status = PipeChannel::receive(pipe->getParentFd());
-                    KitchenStatus ks;
-                    ks._totalCooks = status->getTotalCooks();
-                    ks._busyCooks = status->getBusyCooks();
-                    std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
-                    _latestStatuses[idx] = std::move(ks);
                 } catch (const std::exception& e) {
                     std::cerr << "Receive error: " << e.what() << std::endl;
                 }
@@ -121,11 +115,6 @@ namespace Plazza {
     void Reception::handleStatus()
     {
         std::cout << "Requesting status from all kitchens..." << std::endl;
-        for (auto& kitchen : _kitchens) {
-            OrderMessage msg;
-            msg.setType(MessageType::STATUS);
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), msg);
-        }
         std::cout << "Status of kitchen :\n";
         for (size_t i = 0; i < _latestStatuses.size(); ++i) {
             auto& status = _latestStatuses[i];
@@ -150,9 +139,6 @@ namespace Plazza {
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
-            OrderMessageBuilder builder;
-            OrderMessage order = builder.setType(MessageType::COMMAND).setPizzas(batch).build();
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), order);
         }
     }
 
