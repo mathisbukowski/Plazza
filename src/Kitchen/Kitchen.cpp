@@ -9,7 +9,7 @@
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
 
-Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
+Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier, int kitchenId)
 {
     _numberOfCooks = numberOfCooks;
     _numberOfPizzas = 0;
@@ -18,6 +18,7 @@ Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multi
     _fd = fd;
     _threadPool = std::make_unique<ThreadPool>(numberOfCooks);
     _multiplier = multiplier;
+    _kitchenId = kitchenId;
 }
 
 Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
@@ -26,6 +27,10 @@ Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
     _numberOfPizzas = other._numberOfPizzas;
     _running = other._running;
     _timeToRestock = other._timeToRestock;
+    _fd = other._fd;
+    _threadPool = std::make_unique<ThreadPool>(_numberOfCooks);
+    _multiplier = other._multiplier;
+    _kitchenId = other._kitchenId;
 }
 
 Plazza::Kitchen::~Kitchen()
@@ -34,28 +39,6 @@ Plazza::Kitchen::~Kitchen()
 
 bool Plazza::Kitchen::handleOrder()
 {
-    uint32_t size = 0;
-    ssize_t bytesRead = read(_fd, &size, sizeof(size));
-    if (bytesRead != sizeof(size))
-        return false;
-    std::vector<char> buffer(size);
-    bytesRead = read(_fd, buffer.data(), size);
-    if (bytesRead != static_cast<ssize_t>(size))
-        return false;
-    OrderMessage msg;
-    msg.deserialize(buffer);
-    auto pizzas = msg.getPizzas();
-
-    for (const auto & pizza : pizzas) {
-        if (_numberOfPizzas >= 2 * _numberOfCooks) {
-            std::cout << "Kitchen full, cannot accept more pizzas\n";
-            return false;
-        }
-        auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
-        _threadPool->enqueueTask(cookTask);
-        _numberOfPizzas++;
-        std::cout << "Pizza added to cooking queue\n";
-    }
     return true;
 }
 
@@ -104,19 +87,5 @@ void Plazza::Kitchen::stop()
 
 bool Plazza::Kitchen::handleStatus() 
 {
-    StatusMessage statusMessage;
-    statusMessage.setType(MessageType::STATUS);
-    statusMessage._totalCooks = _numberOfCooks;
-    statusMessage._busyCooks = _numberOfPizzas;
-    statusMessage.setStock(_stock.getAll());
-    std::vector<char> buffer;
-    statusMessage.serialize(buffer);
-    uint32_t size = buffer.size();
-    ssize_t bytesWritten = write(_fd, &size, sizeof(size));
-    if (bytesWritten != sizeof(size))
-        return false;
-    bytesWritten = write(_fd, buffer.data(), size);
-    if (bytesWritten != static_cast<ssize_t>(size))
-        return false;
     return true;
 }
