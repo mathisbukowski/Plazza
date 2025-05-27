@@ -15,18 +15,15 @@ namespace Plazza {
             _workers.emplace_back(&ThreadPool::workerLoop, this);
     }
 
-    ThreadPool::~ThreadPool() {
-        stop();
+    ThreadPool::~ThreadPool()
+    {
+        std::lock_guard<std::mutex> lock(_queueMutex);
+        _stop = true;
+        _condition.notify_all();
         for (auto &worker : _workers) {
             if (worker.joinable())
                 worker.join();
         }
-    }
-
-    void ThreadPool::stop() {
-        std::lock_guard<std::mutex> lock(_queueMutex);
-        _stop = true;
-        _condition.notify_all();
     }
 
     void ThreadPool::enqueueTask(std::shared_ptr<ICookTask> task) {

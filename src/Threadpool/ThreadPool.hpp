@@ -41,11 +41,6 @@ namespace Plazza {
              * @param task A shared pointer to the cooking task to be executed
              */
             void enqueueTask(std::shared_ptr<ICookTask> task);
-            /**
-             * Stops the thread pool and joins all worker threads.
-             * This method should be called to cleanly shut down the thread pool.
-             */
-            void stop();
         private:
             /**
              * Worker loop function for each thread in the pool.

@@ -16,8 +16,14 @@ namespace Plazza {
     }
     PipeChannel::~PipeChannel()
     {
-        this->closeIfOpen(_fds[0]);
-        this->closeIfOpen(_fds[1]);
+        if (_fds[0] != -1) {
+            ::close(_fds[0]);
+            _fds[0] = -1;
+        }
+        if (_fds[1] != -1) {
+            ::close(_fds[1]);
+            _fds[1] = -1;
+        }
     }
 
     int PipeChannel::getParentFd() const
