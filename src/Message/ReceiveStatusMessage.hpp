@@ -14,7 +14,7 @@
 
 
 namespace Plazza {
-    class ReceiveStatusMessage : IMessage {
+    class ReceiveStatusMessage : public IMessage {
     public:
         ReceiveStatusMessage(uint8_t type): _type(type) {}
 

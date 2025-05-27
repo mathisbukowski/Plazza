@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <vector>
 
+#include "Message/IMessage.hpp"
+
 
 namespace Plazza {
     /**
@@ -55,47 +57,16 @@ namespace Plazza {
          * sends a message through the pipe.
          * @param fd The file descriptor to send the message through
          * @param message The message to send
-         * @tparam T The type of the message, which must implement serialize and deserialize methods
          */
-        template<typename T>
-        void send(int fd, const T& message)
-        {
-            std::vector<char> buffer;
-            message.serialize(buffer);
-            uint32_t size = buffer.size();
-            if (::write(fd, &size, sizeof(size)) == -1)
-                throw std::runtime_error("write failed");
-            if (::write(fd, buffer.data(), buffer.size()) == -1)
-                throw std::runtime_error("write failed");
-        }
+        static bool send(int fd, const IMessage& message);
         /**
          * Receives a message from the pipe.
          * @param fd The file descriptor to receive the message from
-         * @return A shared pointer to the received message of type T
-         * @tparam T The type of the message, which must implement serialize and deserialize methods
+         * @return A shared pointer to the received message IMessage
          */
-        template<typename T>
-        std::shared_ptr<T> receive(int fd)
-        {
-            uint32_t size = 0;
-            ssize_t bytes = :: read(fd, &size, sizeof(size));
-            if (bytes != sizeof(size))
-                throw std::runtime_error("failed to read from pipe");
-            std::vector<char> buffer(size);
-            bytes = :: read(fd, buffer.data(), size);
-            if (bytes != static_cast<ssize_t>(size))
-                throw std::runtime_error("failed to read from pipe");
-            std::shared_ptr<T> message = std::make_shared<T>();
-            message->deserialize(buffer);
-            return message;
-        }
-        /**
-         * Writes data to the specified file descriptor.
-         * @param fd The file descriptor to write to
-         * @param data The data to write
-         * This method writes the data to the specified file descriptor.
-         */
-        void writeInChannel(int& fd, std::vector<char> data);
+        static std::shared_ptr<IMessage> receive(int fd);
+
+        static std::shared_ptr<IMessage> createMessage(MessageType messageType);
     private:
         int _fds[2]; ///> Array to hold the file descriptors for the pipe
 

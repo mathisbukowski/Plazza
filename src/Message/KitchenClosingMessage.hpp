@@ -10,7 +10,7 @@
 #include "IMessage.hpp"
 
 namespace Plazza {
-    class KitchenClosing : IMessage {
+    class KitchenClosing : public IMessage {
     public:
         KitchenClosing(uint8_t type): _type(type) {};
 
