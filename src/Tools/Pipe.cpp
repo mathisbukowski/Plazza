@@ -62,24 +62,23 @@ namespace Plazza {
 
     std::shared_ptr<IMessage> PipeChannel::receive(int fd)
     {
-        uint8_t byteType;
-        ssize_t bytesReceived = ::read(fd, &byteType, sizeof(byteType));
-        if (bytesReceived <= 0)
+        uint32_t size;
+        if (::read(fd, &size, sizeof(size)) != sizeof(size))
             return nullptr;
 
-        auto typeMessage = static_cast<MessageType>(byteType);
-        std::shared_ptr<IMessage> message = createMessage(typeMessage);
-
-        char buffer[4096];
-        buffer[0] = byteType;
-        ssize_t lengthReceived = ::read(fd, buffer + 1, 4096 - 1);
-        if (lengthReceived <= 0)
+        std::vector<char> buffer(size);
+        if (::read(fd, buffer.data(), size) != static_cast<ssize_t>(size))
             return nullptr;
-        std::string data(buffer, lengthReceived + 1);
+
+        auto byteType = static_cast<uint8_t>(buffer[0]);
+        auto message = createMessage(static_cast<MessageType>(byteType));
+        if (!message)
+            return nullptr;
+
         try {
-            message->deserialize(data);
-        } catch (const std::exception &e) {
-            std::cerr << e.what() << std::endl;
+            message->deserialize(std::string(buffer.begin(), buffer.end()));
+        } catch (const std::exception& e) {
+            std::cerr << "Deserialization error: " << e.what() << std::endl;
             return nullptr;
         }
         return message;
@@ -105,8 +104,13 @@ namespace Plazza {
     {
         std::string buffer;
         message.serialize(buffer);
-        ssize_t bytesSent = ::write(fd, buffer.c_str(), buffer.size());
-        return bytesSent == static_cast<ssize_t>(buffer.size());
+
+        uint32_t size = buffer.size();
+        if (::write(fd, &size, sizeof(size)) != sizeof(size))
+            return false;
+        if (::write(fd, buffer.c_str(), buffer.size()) != static_cast<ssize_t>(buffer.size()))
+            return false;
+        return true;
     }
 
 }

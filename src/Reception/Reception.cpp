@@ -101,7 +101,7 @@ namespace Plazza {
             pipe,
             [this, pipe, idx = _latestStatuses.size()]() mutable {
                 try {
-                    auto status = pipe->receive<StatusMessage>(pipe->getParentFd());
+                    auto status = PipeChannel::receive(pipe->getParentFd());
                     KitchenStatus ks;
                     ks._totalCooks = status->getTotalCooks();
                     ks._busyCooks = status->getBusyCooks();
