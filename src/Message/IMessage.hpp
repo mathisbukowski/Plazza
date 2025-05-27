@@ -30,19 +30,19 @@ namespace Plazza {
          * Serializes the message into a buffer.
          * @param buffer The buffer to serialize the message into
          */
-        virtual void serialize(std::vector<char>& buffer) const = 0;
+        virtual void serialize(std::string& buffer) const = 0;
 
         /**
          * Deserializes the message from a buffer.
          * @param buffer The buffer to deserialize the message from
          */
-        virtual void deserialize(const std::vector<char>& buffer) = 0;
+        virtual void deserialize(const std::string& buffer) = 0;
 
         /**
-         * Gets the packed size of the message.
-         * @return The size of the serialized message in bytes
+         * Get the type of the message
+         * @return type of the message
          */
-        virtual size_t getPackedSize() const = 0;
+        [[nodiscard]] virtual uint8_t getType() const = 0;
     };
 }
 

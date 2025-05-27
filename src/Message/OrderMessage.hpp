@@ -22,53 +22,37 @@ namespace Plazza {
     public:
         /**
          * Default constructor for OrderMessage.
-         * Initializes the message type to UNDEFINED.
          */
-        OrderMessage() = default;
+        explicit OrderMessage(uint8_t type): _type(type) {}
         /**
          * Destructor for OrderMessage.
          */
-        ~OrderMessage() = default;
+        ~OrderMessage() override = default;
         /**
          * Serializes the OrderMessage into a buffer.
          * @param buffer The buffer to serialize the message into
          * This method converts the message type and pizzas into a binary format for transmission.
          */
-        void serialize(std::vector<char>& buffer) const override;
+        void serialize(std::string& buffer) const override;
         /**
          * Deserializes the OrderMessage from a buffer.
          * @param buffer The buffer to deserialize the message from
          * This method reconstructs the message type and pizzas from the binary format.
          */
-        void deserialize(const std::vector<char>& buffer) override;
-        /**
-         * Gets the packed size of the OrderMessage.
-         * @return The size of the serialized message in bytes
-         */
-        size_t getPackedSize() const override;
-        /**
-         * Sets the type of the order message.
-         * @param type The type of the message
-         */
-        void setType(const MessageType& type) { _type = type; }
-        /**
-         * Sets the pizzas in the order message.
-         * @param pizzas The pizzas to set in the message
-         */
-        void setPizzas(const std::vector<std::shared_ptr<IPizza>> pizzas) { _pizzas = pizzas; }
+        void deserialize(const std::string& buffer) override;
         /**
          * Gets the pizzas in the order message.
          * @return A vector of shared pointers to the pizzas in the message
          */
-        std::vector<std::shared_ptr<IPizza>> getPizzas() const { return _pizzas; }
+        [[nodiscard]] std::vector<std::shared_ptr<IPizza>> getPizzas() const { return _pizzas; }
         /**
          * Gets the type of the order message.
          * @return The type of the message
          */
-        MessageType getType() const { return _type; }
+        [[nodiscard]] uint8_t getType() const override { return _type; }
 
         std::vector<std::shared_ptr<IPizza>> _pizzas; ///> The pizzas in the order message
-        MessageType _type; ///> The type of the order message
+        uint8_t _type; ///> The type of the order message
     };
 }
 
