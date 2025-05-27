@@ -36,8 +36,7 @@ namespace Plazza {
         constexpr std::size_t expectedSize = sizeof(_type) + sizeof(_totalCooks) + sizeof(_busyCooks) + sizeof(int) * stockSize;
 
         if (buffer.size() != expectedSize) {
-            std::cerr << "Received message with wrong size!" << std::endl;
-            return;
+            throw std::invalid_argument("Received message size does not match expected size");
         }
         std::size_t offset = 0;
         std::memcpy(&_type, &buffer[offset], sizeof(_type));

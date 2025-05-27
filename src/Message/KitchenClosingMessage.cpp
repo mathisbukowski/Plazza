@@ -18,8 +18,7 @@ namespace Plazza {
     void KitchenClosing::deserialize(const std::string& buffer)
     {
         if (buffer.size() < 2) {
-            std::cerr << "buffer size is less than 2" << std::endl;
-            return;
+            throw std::invalid_argument("buffer too small");
         }
         _type = static_cast<char>(buffer[0]);
         _id = static_cast<char>(buffer[1]);

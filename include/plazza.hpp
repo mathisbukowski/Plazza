@@ -29,12 +29,10 @@ namespace Plazza {
         XXL = 16 ///> Extra Extra Large pizza size
     };
     enum class MessageType {
-        UNDEFINED, ///> Undefined message type
-        COMMAND, ///> Order/Command message type
-        STATUS, ///> Status response message type
-        PIZZA_READY, ///> Pizza ready message type
-        KITCHEN_FULL, ///> Kitchen full message type
-        KITCHEN_CLOSING ///> Kitchen closing message type
+        ORDER = 0x01, ///> Order/Command message type
+        STATUS = 0x02, ///> Status response message type
+        KITCHEN_CLOSING = 0x03, ///> Kitchen closing message type
+        RECEIVE_STATUS = 0x04,
     };
 };
 

@@ -17,11 +17,9 @@ namespace Plazza {
     }
 
     void StatusMessage::deserialize(const std::string& buffer)
-    {
-        if (buffer.size() < 1) {
-            std::cerr << "Buffer is too small" << std::endl;
-            return;
-        }
+{
+        if (buffer.empty())
+            throw std::invalid_argument("buffer must be at least 1 byte");
         _type = static_cast<char>(buffer[0]);
     }
 }
