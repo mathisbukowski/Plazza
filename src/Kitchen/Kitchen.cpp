@@ -43,39 +43,6 @@ Plazza::Kitchen::~Kitchen()
 {
 }
 
-bool Plazza::Kitchen::handleOrder()
-{
-    auto message = PipeChannel::receive(_readFd);
-
-    if (!message)
-        return false;
-
-    switch (message->getType()) {
-    case static_cast<uint8_t>(MessageType::ORDER): {
-            auto orderMsg = std::dynamic_pointer_cast<OrderMessage>(message);
-            if (!orderMsg)
-                return false;
-            for (const auto & pizza : orderMsg->getPizzas()) {
-                if (_numberOfPizzas >= 2 * _numberOfCooks) {
-                    std::cout << "Kitchen full, cannot accept more pizzas\n";
-                    return false;
-                }
-                std::cout << "Pizza: " << "Size=" << static_cast<int>(pizza->getSize()) << "Type=" << static_cast<int>(pizza->getType()) << std::endl;
-                auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
-                _threadPool->enqueueTask(cookTask);
-                _numberOfPizzas++;
-                std::cout << "Pizza added to cooking queue\n";
-            }
-            break;
-    }
-    case static_cast<uint8_t>(MessageType::RECEIVE_STATUS):
-            return this->handleStatus();
-    default:
-        std::cerr << "[Kitchen] Unknown message type received." << std::endl;
-        return false;
-    }
-    return true;
-}
 
 void Plazza::Kitchen::start()
 {
@@ -96,9 +63,6 @@ void Plazza::Kitchen::start()
             _stock.restockAll();
             lastRestockTime = now;
         }
-        if (!handleOrder())
-            this->stop();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
@@ -108,15 +72,6 @@ void Plazza::Kitchen::stop()
     _running = false;
     std::cout << "Kitchen shutting down" << std::endl;
     KitchenClosing msg(static_cast<uint8_t>(MessageType::KITCHEN_CLOSING));
+    msg._id = _kitchenId;
     PipeChannel::send(_writeFd, msg);
-}
-
-bool Plazza::Kitchen::handleStatus() 
-{
-    ReceiveStatusMessage message(static_cast<uint8_t>(MessageType::RECEIVE_STATUS));
-    message._totalCooks = _numberOfCooks;
-    message._busyCooks = _numberOfPizzas;
-    message._stock = _stock.getAll();
-
-    return PipeChannel::send(_writeFd, message);
 }

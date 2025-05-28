@@ -6,12 +6,8 @@
 */
 
 #include "Reception.hpp"
-#include "Event/SelectablePipe.hpp"
 #include "Factory/PizzaFactory.hpp"
 #include "Kitchen/Kitchen.hpp"
-#include "Message/OrderMessage.hpp"
-#include "Message/ReceiveStatusMessage.hpp"
-#include "Tools/ResultException.hpp"
 
 
 namespace Plazza {
@@ -48,18 +44,13 @@ namespace Plazza {
                 continue;
             if (!_running)
                 break;
-            if (input == "status") {
-                this->handleStatus();
+            if (input == "status")
                 continue;
-            }
-
             try {
                 this->handleInput(input);
             } catch (const ReceptionException &e) {
                 std::cerr << "Error: " << e.what() << std::endl;
             }
-
-            _pollLoop.pollOnce(100);
         }
         return 0;
     }
@@ -94,30 +85,7 @@ namespace Plazza {
         }
 
         pipe->closeChildFd();
-        _latestStatuses.emplace_back();
-        auto selectable = std::make_shared<SelectablePipe>(
-            pipe,
-            [this, pipe]() mutable {
-                this->processMessage(pipe->getParentFd());
-            }
-        );
-        _pollLoop.addSelectable(selectable);
-        _kitchens.emplace_back(std::move(forkEntity), pipe);
-    }
-
-    void Reception::handleStatus()
-    {
-        std::cout << "Status of kitchen :\n";
-        for (size_t i = 0; i < _latestStatuses.size(); ++i) {
-            auto& status = _latestStatuses[i];
-            std::cout << "Kitchen #" << i << "\n";
-            std::cout << "  Total Cooks: " << status._totalCooks << "\n";
-            std::cout << "  Busy Cooks: " << status._busyCooks << "\n";
-            std::cout << "  Stock: ";
-            for (int j = 0; j < IngredientCount; ++j)
-                std::cout << j << ": " << status._stock[j] << " ";
-            std::cout << "\n";
-        }
+        _kitchens.emplace_back(std::move(forkEntity), pipe, _kitchenCount);
     }
 
     void Reception::dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas)
@@ -131,41 +99,7 @@ namespace Plazza {
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
-            OrderMessage message = OrderMessage(static_cast<uint8_t>(MessageType::ORDER));
-            message._pizzas = batch;
-            if (!PipeChannel::send(kitchen._pipe->getParentFd(), message))
-                return;
         }
-    }
-    void Reception::processMessage(int fd)
-    {
-        auto receivedMessage = PipeChannel::receive(fd);
-
-        if (!receivedMessage)
-            return;
-
-        switch (receivedMessage->getType()) {
-        case static_cast<uint8_t>(MessageType::KITCHEN_CLOSING):
-            std::cout << "Kitchen closing" << std::endl;
-            break;
-        case static_cast<uint8_t>(MessageType::ORDER):
-            break;
-        case static_cast<uint8_t>(MessageType::RECEIVE_STATUS):
-            this->receiveStatusFromKitchen(std::dynamic_pointer_cast<ReceiveStatusMessage>(receivedMessage));
-        case static_cast<uint8_t>(MessageType::STATUS):
-            break;
-        default:
-            std::cerr << "Unknown message received" << std::endl;
-        }
-    }
-
-    void Reception::receiveStatusFromKitchen(const std::shared_ptr<ReceiveStatusMessage>& message)
-    {
-        KitchenStatus ks;
-        ks._stock = message->_stock;
-        ks._busyCooks = message->_busyCooks;
-        ks._totalCooks = message->_totalCooks;
-        _latestStatuses.emplace_back(ks);
     }
 
 

@@ -15,6 +15,7 @@
 #include "Parser.hpp"
 #include "Event/EventLoop.hpp"
 #include "Kitchen/Stock.hpp"
+#include "Message/KitchenClosingMessage.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 #include "Tools/Pipe.hpp"
@@ -37,14 +38,15 @@ namespace Plazza
             public:
                 std::unique_ptr<ForkEntity> _fork; ///> Unique pointer to the fork entity for process management
                 std::shared_ptr<PipeChannel> _pipe; ///> Shared pointer to the pipe channel for communication
+                int _kitchenId;
                 /**
                  * Constructor for KitchenChannel.
                  * @param _fork Unique pointer to the fork entity
                  * @param _pipe Shared pointer to the pipe channel
                  * Initializes the kitchen channel with the provided fork and pipe.
                  */
-                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::shared_ptr<PipeChannel> _pipe):
-                _fork(std::move(_fork)), _pipe(std::move(_pipe)) {}
+                KitchenChannel(std::unique_ptr<ForkEntity> _fork, std::shared_ptr<PipeChannel> _pipe, int kitchenId):
+                _fork(std::move(_fork)), _pipe(std::move(_pipe)), _kitchenId(kitchenId) {}
             };
             /**
              * @class KitchenStatus
@@ -105,16 +107,10 @@ namespace Plazza
              */
             void handleInput(const std::string& input);
             /**
-             * handle the status of the kitchens.
-             */
-            void handleStatus();
-            /**
              * dispatch commands to all kitchen
              * @param pizzas: array of commands to dispatch
              */
             void dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas);
-
-            void processMessage(int fd);
 
         private:
             bool _running = false; ///> Flag to indicate if the reception is running
@@ -124,9 +120,6 @@ namespace Plazza
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
             std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels
-            EventLoop _pollLoop; ///> Event loop for handling events
-            std::vector<KitchenStatus> _latestStatuses; ///> Vector to store the latest statuses of kitchens
-            void receiveStatusFromKitchen(const std::shared_ptr<ReceiveStatusMessage>& message); ///> Function to receive status from kitchens
             int _kitchenCount = 0;
 
     };

@@ -42,11 +42,6 @@ namespace Plazza {
              */
             ~Kitchen();
             /**
-             * Handle order messages
-             * @return true if ok
-             */
-            bool handleOrder();
-            /**
              * Start the kitchen and begin the restocking process.
              */
             void start();
@@ -54,13 +49,6 @@ namespace Plazza {
              * Stop the kitchen and end the restocking process.
              */
             void stop();
-            /**
-             * Handle status requests from the reception.
-             * This method sends the current status of the kitchen, including the number of cooks
-             * and the stock of ingredients.
-             * @return True if the status was handled successfully, false otherwise.
-             */
-            bool handleStatus();
         private:
             int _numberOfCooks; ///> Number of cooks in the kitchen
             int _numberOfPizzas; ///> Number of pizzas in the kitchen
