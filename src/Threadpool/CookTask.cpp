@@ -34,6 +34,8 @@ namespace Plazza {
 
     void CookTask::execute()
     {
+        if (!_pizza)
+            return;
         if (!_stock.consumeIngredientsFor(_pizza)) {
             std::cout << "Cannot cook pizza: missing ingredients\n";
             return;

@@ -18,10 +18,10 @@
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 #include "Tools/Pipe.hpp"
+#include "Message/ReceiveStatusMessage.hpp"
 
 namespace Plazza
 {
-    class PosixQueue;
     /**
      * @class Reception
      * Class responsible for managing the reception of orders and interacting with kitchens.
@@ -114,6 +114,8 @@ namespace Plazza
              */
             void dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas);
 
+            void processMessage(int fd);
+
         private:
             bool _running = false; ///> Flag to indicate if the reception is running
             std::unique_ptr<int> _status = nullptr; ///> Pointer to the status of the kitchens
@@ -124,7 +126,8 @@ namespace Plazza
             std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels
             EventLoop _pollLoop; ///> Event loop for handling events
             std::vector<KitchenStatus> _latestStatuses; ///> Vector to store the latest statuses of kitchens
-            void receiveStatusFromKitchen(); ///> Function to receive status from kitchens
+            void receiveStatusFromKitchen(const std::shared_ptr<ReceiveStatusMessage>& message); ///> Function to receive status from kitchens
+            int _kitchenCount = 0;
 
     };
 }

@@ -16,6 +16,7 @@
 #include "../Threadpool/CookTask.hpp"
 
 #include "Stock.hpp"
+#include "Tools/Pipe.hpp"
 
 namespace Plazza {
     /**
@@ -35,7 +36,7 @@ namespace Plazza {
              * @param numberOfCooks The number of cooks in the kitchen
              * @param timeToRestock The time to restock the kitchen
              */
-            Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier = 1, int kitchenId);
+            Kitchen(int numberOfCooks, int timeToRestock, int readFd, int writeFd, double multiplier, int kitchenId);
             /**
              * Default destructor for the kitchen.
              */
@@ -66,10 +67,10 @@ namespace Plazza {
             Stock _stock; ///> Stock of ingredients in the kitchen
             bool _running; ///> Flag to indicate if the kitchen is running
             int _timeToRestock; ///> Time to restock the kitchen
-            int _fd; ///> Fd of the kitchen for communication
+            int _readFd;
+            int _writeFd;
             std::unique_ptr<ThreadPool> _threadPool;
             double _multiplier;
-            static constexpr  int STATUS_INTERVAL_MS = 1000; ///> Interval of status sending
             int _kitchenId;
     };
 }

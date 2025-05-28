@@ -27,14 +27,17 @@ namespace Plazza {
     }
 
     void ThreadPool::enqueueTask(std::shared_ptr<ICookTask> task) {
+        std::weak_ptr<ICookTask> weakTask = task;
         {
             std::lock_guard<std::mutex> lock(_queueMutex);
-            _tasks.push([task]() {
-                task->execute();
+            _tasks.push([weakTask]() {
+                if (auto lockedTask = weakTask.lock())
+                    lockedTask->execute();
             });
         }
         _condition.notify_one();
     }
+
 
     void ThreadPool::workerLoop() {
         while (!_stop) {

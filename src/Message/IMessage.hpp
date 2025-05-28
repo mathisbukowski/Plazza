@@ -9,7 +9,7 @@
 #define IMESSAGE_HPP_
 
 #include <vector>
-#include <cstddef>
+#include <cstdint>
 #include "plazza.hpp"
 
 namespace Plazza {

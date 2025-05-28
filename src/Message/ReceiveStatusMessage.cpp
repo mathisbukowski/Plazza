@@ -12,8 +12,8 @@
 namespace Plazza {
     void ReceiveStatusMessage::serialize(std::string& buffer) const
     {
-        constexpr std::size_t stockSize = _stock.size();
-        constexpr std::size_t totalSize = sizeof(_type) + sizeof(_totalCooks) + sizeof(_busyCooks) + sizeof(int) * stockSize;
+        std::size_t stockSize = _stock.size();
+        std::size_t totalSize = sizeof(_type) + sizeof(_totalCooks) + sizeof(_busyCooks) + sizeof(int) * stockSize;
 
         buffer.resize(totalSize);
         std::size_t offset = 0;
@@ -32,9 +32,8 @@ namespace Plazza {
 
     void ReceiveStatusMessage::deserialize(const std::string& buffer)
     {
-        constexpr std::size_t stockSize = _stock.size();
-        constexpr std::size_t expectedSize = sizeof(_type) + sizeof(_totalCooks) + sizeof(_busyCooks) + sizeof(int) * stockSize;
-
+        std::size_t stockSize = _stock.size();
+        std::size_t expectedSize = sizeof(_type) + sizeof(_totalCooks) + sizeof(_busyCooks) + sizeof(int) * stockSize;
         if (buffer.size() != expectedSize) {
             throw std::invalid_argument("Received message size does not match expected size");
         }
