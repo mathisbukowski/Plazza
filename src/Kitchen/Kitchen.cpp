@@ -30,6 +30,11 @@ Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
 
 Plazza::Kitchen::~Kitchen()
 {
+    if (_running) {
+        this->stop();
+    }
+    _threadPool.reset();
+    std::cout << "[Kitchen " << getpid() << "] stopped." << std::endl;
 }
 
 bool Plazza::Kitchen::handleOrder()
