@@ -8,6 +8,7 @@
 #include "Kitchen.hpp"
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
+#include "Tools/Tools.hpp"
 
 Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
 {
@@ -34,17 +35,17 @@ Plazza::Kitchen::~Kitchen()
         this->stop();
     }
     _threadPool.reset();
-    std::cout << "[Kitchen " << getpid() << "] stopped." << std::endl;
+    std::cout << "[Kitchen " << Tools::toolGetPid() << "] stopped." << std::endl;
 }
 
 bool Plazza::Kitchen::handleOrder()
 {
     uint32_t size = 0;
-    ssize_t bytesRead = read(_fd, &size, sizeof(size));
+    ssize_t bytesRead = Tools::toolRead(_fd, &size, sizeof(size));
     if (bytesRead != sizeof(size))
         return false;
     std::vector<char> buffer(size);
-    bytesRead = read(_fd, buffer.data(), size);
+    bytesRead = Tools::toolRead(_fd, buffer.data(), size);
     if (bytesRead != static_cast<ssize_t>(size))
         return false;
     OrderMessage msg;
@@ -94,7 +95,7 @@ void Plazza::Kitchen::start()
             }
             lastStatusTime = now;
         }
-        if (handleOrder())
+        if (this->handleOrder())
             this->stop();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
