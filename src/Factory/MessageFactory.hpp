@@ -13,6 +13,7 @@
 
 namespace Plazza {
     class MessageFactory {
+    public:
         static std::unique_ptr<IMessage> createMessage(const std::vector<char>& buffer);
     };
 }
