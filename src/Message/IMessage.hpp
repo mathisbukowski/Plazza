@@ -39,10 +39,10 @@ namespace Plazza {
         virtual void deserialize(const std::vector<char>& buffer) = 0;
 
         /**
-         * Gets the packed size of the message.
-         * @return The size of the serialized message in bytes
+         * Gets the type of the message.
+         * @return The type of the serialized message
          */
-        virtual size_t getPackedSize() const = 0;
+        virtual MessageType getType() const = 0;
     };
 }
 
