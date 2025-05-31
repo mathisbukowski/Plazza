@@ -9,13 +9,13 @@
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
 
-Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
+Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, std::shared_ptr<PipeChannel> pipe, int multiplier)
 {
     _numberOfCooks = numberOfCooks;
     _numberOfPizzas = 0;
     _running = true;
     _timeToRestock = timeToRestock;
-    _fd = fd;
+    _pipe = pipe;
     _threadPool = std::make_unique<ThreadPool>(numberOfCooks);
     _multiplier = multiplier;
 }
@@ -26,6 +26,8 @@ Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
     _numberOfPizzas = other._numberOfPizzas;
     _running = other._running;
     _timeToRestock = other._timeToRestock;
+    _pipe = other._pipe;
+    _multiplier = other._multiplier;
 }
 
 Plazza::Kitchen::~Kitchen()
@@ -39,63 +41,61 @@ Plazza::Kitchen::~Kitchen()
 
 bool Plazza::Kitchen::handleOrder()
 {
-    uint32_t size = 0;
-    ssize_t bytesRead = read(_fd, &size, sizeof(size));
-    if (bytesRead != sizeof(size))
-        return false;
-    std::vector<char> buffer(size);
-    bytesRead = read(_fd, buffer.data(), size);
-    if (bytesRead != static_cast<ssize_t>(size))
-        return false;
-    OrderMessage msg;
-    msg.deserialize(buffer);
-    auto pizzas = msg.getPizzas();
-
-    for (const auto & pizza : pizzas) {
-        if (_numberOfPizzas >= 2 * _numberOfCooks) {
-            std::cout << "Kitchen full, cannot accept more pizzas\n";
+    try {
+        auto msg = _pipe->receive<OrderMessage>(_pipe->getReadFd());
+        if (!msg) {
             return false;
         }
-        auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
-        _threadPool->enqueueTask(cookTask);
-        _numberOfPizzas++;
-        std::cout << "Pizza added to cooking queue\n";
+        if (msg->getType() == MessageType::STATUS) {
+            return this->handleStatusRequest();
+        } else if (msg->getType() == MessageType::COMMAND) {
+            auto pizzas = msg->getPizzas();
+            for (const auto& pizza : pizzas) {
+                if (_numberOfPizzas >= 2 * _numberOfCooks) {
+                    std::cout << "Kitchen full, cannot accept more pizzas\n";
+                    return false;
+                }
+                auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
+                _threadPool->enqueueTask(cookTask);
+                _numberOfPizzas++;
+                std::cout << "Pizza added to cooking queue\n";
+            }
+        }
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error handling order: " << e.what() << std::endl;
+        return false;
     }
-    return true;
 }
 
 void Plazza::Kitchen::start()
 {
     auto startTime = std::chrono::steady_clock::now();
-    auto lastStatusTime = startTime;
+    auto lastActivityTime = startTime;
     auto lastRestockTime = startTime;
 
-    const int STATUS_INTERVAL_MS = 1000;
+    const int ACTIVITY_TIMEOUT_SEC = 5;
 
     std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
 
     while (_running) {
         auto now = std::chrono::steady_clock::now();
-
-        auto elapsedTimeSec = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
-        if (elapsedTimeSec >= 5)
+        bool hasActivity = this->handleOrder();
+        if (hasActivity) {
+            lastActivityTime = now;
+        }
+        auto elapsedInactivitySec = std::chrono::duration_cast<std::chrono::seconds>(now - lastActivityTime).count();
+        if (elapsedInactivitySec >= ACTIVITY_TIMEOUT_SEC) {
+            std::cout << "[Kitchen] No activity for " << ACTIVITY_TIMEOUT_SEC << " seconds, shutting down." << std::endl;
             this->stop();
-
+            break;
+        }
         auto elapsedRestockMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRestockTime).count();
         if (elapsedRestockMs >= _timeToRestock) {
             _stock.restockAll();
             lastRestockTime = now;
         }
-        auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
-        if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
-            if (!this->handleStatus()) {
-                std::cerr << "Failed to send status." << std::endl;
-                this->stop();
-            }
-            lastStatusTime = now;
-        }
-        if (handleOrder())
-            this->stop();
+        _numberOfPizzas = _threadPool->getActiveTasks();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
@@ -107,21 +107,23 @@ void Plazza::Kitchen::stop()
     std::cout << "Kitchen shutting down" << std::endl;
 }
 
-bool Plazza::Kitchen::handleStatus() 
+bool Plazza::Kitchen::handleStatusRequest()
 {
-    StatusMessage statusMessage;
-    statusMessage.setType(MessageType::STATUS);
-    statusMessage._totalCooks = _numberOfCooks;
-    statusMessage._busyCooks = _numberOfPizzas;
-    statusMessage.setStock(_stock.getAll());
-    std::vector<char> buffer;
-    statusMessage.serialize(buffer);
-    uint32_t size = buffer.size();
-    ssize_t bytesWritten = write(_fd, &size, sizeof(size));
-    if (bytesWritten != sizeof(size))
+    try {
+        StatusMessage statusMessage;
+        statusMessage.setType(MessageType::STATUS);
+        statusMessage.setTotalCooks(_numberOfCooks);
+        statusMessage.setBusyCooks(_numberOfPizzas);
+        statusMessage.setStock(_stock.getAll());
+        _pipe->send(_pipe->getWriteFd(), statusMessage);
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to send status: " << e.what() << std::endl;
         return false;
-    bytesWritten = write(_fd, buffer.data(), size);
-    if (bytesWritten != static_cast<ssize_t>(size))
-        return false;
-    return true;
+    }
+}
+
+bool Plazza::Kitchen::handleStatus()
+{
+    return this->handleStatusRequest();
 }
