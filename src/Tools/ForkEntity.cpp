@@ -36,7 +36,7 @@ namespace Plazza {
     }
 
     int ForkEntity::waitChild() {
-        if (!isParent())
+        if (!this->isParent())
             throw ForkEntityException("Only parent can wait for child");
 
         int status = 0;
@@ -49,6 +49,11 @@ namespace Plazza {
 
     std::optional<int> ForkEntity::getExitStatus() const {
         return _exitStatus;
+    }
+
+    pid_t ForkEntity::getPid()
+    {
+        return this->isParent() ? _parentPid : _childPid;
     }
 
 }

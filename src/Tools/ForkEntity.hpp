@@ -61,6 +61,8 @@ namespace Plazza {
          */
         [[nodiscard]] std::optional<int> getExitStatus() const;
 
+        pid_t getPid();
+
         /**
          * @class ForkEntityException
          * Exception class for handling fork-related errors.
