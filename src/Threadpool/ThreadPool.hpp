@@ -41,6 +41,7 @@ namespace Plazza {
              * @param task A shared pointer to the cooking task to be executed
              */
             void enqueueTask(std::shared_ptr<ICookTask> task);
+            int getActiveTasks();
         private:
             /**
              * Worker loop function for each thread in the pool.

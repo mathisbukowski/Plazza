@@ -51,4 +51,8 @@ namespace Plazza {
         }
     }
 
+    int ThreadPool::getActiveTasks() {
+        std::lock_guard<std::mutex> lock(_queueMutex);
+        return _tasks.size();
+    }
 }
