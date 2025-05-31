@@ -78,39 +78,57 @@ namespace Plazza {
 
     void Reception::createKitchen()
     {
-        auto pipe = std::make_shared<PipeChannel>();
+        int sockets[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) == -1) {
+            std::cerr << "Failed to create socket pair" << std::endl;
+            return;
+        }
+
         std::unique_ptr<ForkEntity> forkEntity;
 
         try {
             forkEntity = std::make_unique<ForkEntity>();
         } catch (const ForkEntity::ForkEntityException& e) {
             std::cerr << "Error: " << e.what() << std::endl;
+            ::close(sockets[0]);
+            ::close(sockets[1]);
             return;
         }
 
         if (forkEntity->isChild()) {
-            pipe->closeParentFd();
-            Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe->getChildFd(), _multiplierCookingTime);
-            kitchenChild.start();
+            ::close(sockets[0]);
+            auto pipe = std::make_shared<PipeChannel>();
+            pipe->setFds(sockets[1], sockets[1]);
+            try {
+                Kitchen kitchenChild(_numberOfCooksPerKitchen, _timeToRestockIngredients, pipe, _multiplierCookingTime);
+                kitchenChild.start();
+            } catch (const std::exception& e) {
+                std::cerr << "Kitchen error: " << e.what() << std::endl;
+            }
+            ::close(sockets[1]);
             std::_Exit(0);
         }
 
-        pipe->closeChildFd();
+        ::close(sockets[1]);
+        auto pipe = std::make_shared<PipeChannel>();
+        pipe->setFds(sockets[0], sockets[0]);
         _latestStatuses.emplace_back();
         auto selectable = std::make_shared<SelectablePipe>(
-            pipe,
-            [this, pipe, idx = _latestStatuses.size()]() mutable {
-                try {
-                    auto status = pipe->receive<StatusMessage>(pipe->getParentFd());
-                    KitchenStatus ks;
-                    ks._totalCooks = status->getTotalCooks();
-                    ks._busyCooks = status->getBusyCooks();
-                    std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
-                    _latestStatuses[idx] = std::move(ks);
-                } catch (const std::exception& e) {
-                    std::cerr << "Receive error: " << e.what() << std::endl;
+                pipe,
+                [this, pipe, idx = _latestStatuses.size() - 1]() mutable {
+                    try {
+                        auto status = pipe->receive<StatusMessage>(pipe->getReadFd());
+                        if (status) {
+                            KitchenStatus ks;
+                            ks._totalCooks = status->getTotalCooks();
+                            ks._busyCooks = status->getBusyCooks();
+                            std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
+                            _latestStatuses[idx] = std::move(ks);
+                        }
+                    } catch (const std::exception& e) {
+                        std::cerr << "Receive error: " << e.what() << std::endl;
+                    }
                 }
-            }
         );
 
 
@@ -122,11 +140,16 @@ namespace Plazza {
     {
         std::cout << "Requesting status from all kitchens..." << std::endl;
         for (auto& kitchen : _kitchens) {
-            OrderMessage msg;
-            msg.setType(MessageType::STATUS);
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), msg);
+            try {
+                OrderMessage msg;
+                msg.setType(MessageType::STATUS);
+                kitchen._pipe->send(kitchen._pipe->getWriteFd(), msg);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to send status request: " << e.what() << std::endl;
+            }
         }
-        std::cout << "Status of kitchen :\n";
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::cout << "Status of kitchens:\n";
         for (size_t i = 0; i < _latestStatuses.size(); ++i) {
             auto& status = _latestStatuses[i];
             std::cout << "Kitchen #" << i << "\n";
@@ -150,10 +173,13 @@ namespace Plazza {
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
-            OrderMessageBuilder builder;
-            OrderMessage order = builder.setType(MessageType::COMMAND).setPizzas(batch).build();
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), order);
+            try {
+                OrderMessageBuilder builder;
+                OrderMessage order = builder.setType(MessageType::COMMAND).setPizzas(batch).build();
+                kitchen._pipe->send(kitchen._pipe->getWriteFd(), order);
+            } catch (const std::exception& e) {
+                std::cerr << "Failed to send order to kitchen: " << e.what() << std::endl;
+            }
         }
     }
-
 }
