@@ -16,6 +16,7 @@ namespace Plazza {
         uint64_t _timestamp;
 
     public:
+        PingMessage() :  _timestamp(0) {}
         PingMessage(uint64_t timestamp) : _timestamp(timestamp) {}
 
         ~PingMessage() override = default;

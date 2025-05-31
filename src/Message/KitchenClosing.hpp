@@ -17,13 +17,14 @@ namespace Plazza {
         uint32_t _reason;
 
     public:
+        KitchenClosingMessage(): _kitchenId(0), _reason(0) {}
         KitchenClosingMessage(uint32_t kitchenId, uint32_t reason) : _kitchenId(kitchenId), _reason(reason) {}
 
         ~KitchenClosingMessage() override = default;
 
         void serialize(std::vector<char>& buffer) const override;
 
-        void deserialize(const std::vector<char>& buffer) override,=;
+        void deserialize(const std::vector<char>& buffer) override;
 
         MessageType getType() const override { return MessageType::KITCHEN_CLOSING; }
 

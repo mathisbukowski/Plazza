@@ -24,6 +24,10 @@ namespace Plazza {
         std::array<int, IngredientCount> _stock;
 
     public:
+        StatusResponseMessage(): _activeCooks(0), _totalCooks(0), _pizzasInQueue(0), _maxPizzasCapacity(0)
+        {
+            _stock.fill(5);
+        }
         StatusResponseMessage(uint32_t activeCooks, uint32_t totalCooks, uint32_t pizzasInQueue, uint32_t maxPizzasCapacity, std::array<int, IngredientCount> stock):
         _activeCooks(activeCooks), _totalCooks(totalCooks), _pizzasInQueue(pizzasInQueue), _maxPizzasCapacity(maxPizzasCapacity), _stock(stock) {}
 

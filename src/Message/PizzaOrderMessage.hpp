@@ -18,6 +18,7 @@ namespace Plazza {
         uint32_t _orderId;
 
     public:
+        PizzaOrderMessage(): _pizzaType(), _pizzaSize(), _orderId() {}
         PizzaOrderMessage(PizzaType type, PizzaSize size, uint32_t orderId)
             : _pizzaType(type), _pizzaSize(size), _orderId(orderId) {}
 

@@ -19,6 +19,7 @@ namespace Plazza {
         uint32_t _cookingTime;
 
     public:
+        PizzaReadyMessage(): _pizzaType(PizzaType::Margarita), _pizzaSize(PizzaSize::S), _orderId(0), _cookingTime(0) {}
         PizzaReadyMessage(PizzaType type, PizzaSize size, uint32_t orderId, uint32_t cookingTime)
             : _pizzaType(type), _pizzaSize(size), _orderId(orderId), _cookingTime(cookingTime) {}
 
