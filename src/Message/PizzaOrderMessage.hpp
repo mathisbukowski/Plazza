@@ -8,19 +8,20 @@
 #ifndef PIZZAORDERMESSAGE_HPP
 #define PIZZAORDERMESSAGE_HPP
 
+#include <memory>
 #include "IMessage.hpp"
+#include "Pizza/APizza.hpp"
 
 namespace Plazza {
     class PizzaOrderMessage : public IMessage {
     private:
-        PizzaType _pizzaType;
-        PizzaSize _pizzaSize;
+        std::vector<std::shared_ptr<IPizza>> _pizzas;
         uint32_t _orderId;
 
     public:
-        PizzaOrderMessage(): _pizzaType(), _pizzaSize(), _orderId() {}
-        PizzaOrderMessage(PizzaType type, PizzaSize size, uint32_t orderId)
-            : _pizzaType(type), _pizzaSize(size), _orderId(orderId) {}
+        PizzaOrderMessage(): _pizzas({}), _orderId() {}
+        PizzaOrderMessage(std::vector<std::shared_ptr<IPizza>> pizzas, uint32_t orderId)
+            : _pizzas(pizzas), _orderId(orderId) {}
 
         ~PizzaOrderMessage() override = default;
 
@@ -30,8 +31,7 @@ namespace Plazza {
 
         MessageType getType() const override { return MessageType::PIZZA_ORDER; }
 
-        PizzaType getPizzaType() const { return _pizzaType; }
-        PizzaSize getPizzaSize() const { return _pizzaSize; }
+        std::vector<std::shared_ptr<IPizza>> getPizzas() const {return _pizzas;}
         uint32_t getOrderId() const { return _orderId; }
     };
 }

@@ -12,9 +12,11 @@
 #include "Factory/PizzaFactory.hpp"
 #include "Kitchen/Kitchen.hpp"
 #include "Message/OrderMessage.hpp"
+#include "Message/PizzaOrderMessage.hpp"
 #include "Tools/ResultException.hpp"
 #include "Message/StatusMessage.hpp"
-
+#include "Message/StatusRequestMessage.hpp"
+#include "Message/StatusResponseMessage.hpp"
 
 namespace Plazza {
 
@@ -60,8 +62,6 @@ namespace Plazza {
             } catch (const ReceptionException &e) {
                 std::cerr << "Error: " << e.what() << std::endl;
             }
-
-            _pollLoop.pollOnce(100);
         }
         return 0;
     }
@@ -97,47 +97,52 @@ namespace Plazza {
 
         pipe->closeChildFd();
         _latestStatuses.emplace_back();
-        auto selectable = std::make_shared<SelectablePipe>(
-            pipe,
-            [this, pipe, idx = _latestStatuses.size()]() mutable {
-                try {
-                    auto status = pipe->receive<StatusMessage>(pipe->getParentFd());
-                    KitchenStatus ks;
-                    ks._totalCooks = status->getTotalCooks();
-                    ks._busyCooks = status->getBusyCooks();
-                    std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
-                    _latestStatuses[idx] = std::move(ks);
-                } catch (const std::exception& e) {
-                    std::cerr << "Receive error: " << e.what() << std::endl;
-                }
-            }
-        );
-
-
-        _pollLoop.addSelectable(selectable);
         _kitchens.emplace_back(std::move(forkEntity), pipe);
     }
 
     void Reception::handleStatus()
     {
         std::cout << "Requesting status from all kitchens..." << std::endl;
+
+        _latestStatuses.clear();
+
         for (auto& kitchen : _kitchens) {
-            OrderMessage msg;
-            msg.setType(MessageType::STATUS);
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), msg);
+            StatusRequestMessage msg;
+            kitchen._pipe->sendToParent(msg);
         }
-        std::cout << "Status of kitchen :\n";
+
+        for (auto& kitchen : _kitchens) {
+            std::unique_ptr<IMessage> message = kitchen._pipe->receiveFromParent(100); // timeout 100ms
+
+            if (!message || message->getType() != MessageType::STATUS_RESPONSE) {
+                std::cerr << "Failed to receive status from kitchen." << std::endl;
+                _latestStatuses.emplace_back();
+                continue;
+            }
+
+            auto response = dynamic_cast<StatusResponseMessage*>(message.get());
+            if (!response) {
+                std::cerr << "Invalid status message received." << std::endl;
+                _latestStatuses.emplace_back();
+                continue;
+            }
+
+            _latestStatuses.push_back(response);
+        }
+
+        std::cout << "Status of kitchens:\n";
         for (size_t i = 0; i < _latestStatuses.size(); ++i) {
             auto& status = _latestStatuses[i];
             std::cout << "Kitchen #" << i << "\n";
-            std::cout << "  Total Cooks: " << status._totalCooks << "\n";
-            std::cout << "  Busy Cooks: " << status._busyCooks << "\n";
+            std::cout << "  Total Cooks: " << status->getTotalCooks() << "\n";
+            std::cout << "  Busy Cooks: " << status->getActiveCooks() << "\n";
             std::cout << "  Stock: ";
             for (int j = 0; j < IngredientCount; ++j)
-                std::cout << static_cast<Ingredient>(j) << ": " << status._stock[j] << " ";
+                std::cout << static_cast<Ingredient>(j) << ": " << status->getStock()[j] << " ";
             std::cout << "\n";
         }
     }
+
 
     void Reception::dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas)
     {
@@ -150,9 +155,8 @@ namespace Plazza {
             std::vector<std::shared_ptr<IPizza>> batch(start, end);
             this->createKitchen();
             KitchenChannel& kitchen = _kitchens.back();
-            OrderMessageBuilder builder;
-            OrderMessage order = builder.setType(MessageType::COMMAND).setPizzas(batch).build();
-            kitchen._pipe->send(kitchen._pipe->getParentFd(), order);
+            PizzaOrderMessage msg(batch, orderId++);
+            kitchen._pipe->sendToParent(msg);
         }
     }
 

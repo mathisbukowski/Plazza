@@ -8,8 +8,13 @@
 #include "Kitchen.hpp"
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
+#include "Message/StatusResponseMessage.hpp"
+#include <sys/select.h>
+#include <unistd.h>
 
-Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
+namespace Plazza {
+
+Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
 {
     _numberOfCooks = numberOfCooks;
     _numberOfPizzas = 0;
@@ -20,15 +25,7 @@ Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multi
     _multiplier = multiplier;
 }
 
-Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
-{
-    _numberOfCooks = other._numberOfCooks;
-    _numberOfPizzas = other._numberOfPizzas;
-    _running = other._running;
-    _timeToRestock = other._timeToRestock;
-}
-
-Plazza::Kitchen::~Kitchen()
+Kitchen::~Kitchen()
 {
     if (_running) {
         this->stop();
@@ -37,21 +34,116 @@ Plazza::Kitchen::~Kitchen()
     std::cout << "[Kitchen " << getpid() << "] stopped." << std::endl;
 }
 
-bool Plazza::Kitchen::handleOrder()
+void Kitchen::start()
 {
+    auto startTime = std::chrono::steady_clock::now();
+    auto lastRestockTime = startTime;
+    auto lastStatusTime = startTime;
+    const int STATUS_INTERVAL_MS = 1000;
+
+    std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
+
+    while (_running) {
+        auto now = std::chrono::steady_clock::now();
+
+        // Restock ingredients periodically
+        auto elapsedRestockMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRestockTime).count();
+        if (elapsedRestockMs >= _timeToRestock) {
+            _stock.restockAll();
+            lastRestockTime = now;
+        }
+
+        // Use select to check if data is available on _fd
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(_fd, &readfds);
+
+        timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 10000; // 10 ms timeout
+
+        int ret = select(_fd + 1, &readfds, nullptr, nullptr, &timeout);
+        if (ret < 0) {
+            std::cerr << "select error" << std::endl;
+            this->stop();
+            break;
+        } else if (ret > 0 && FD_ISSET(_fd, &readfds)) {
+            // Data available, handle incoming message
+            if (!this->handleIncomingMessage()) {
+                std::cerr << "Error handling incoming message, shutting down kitchen." << std::endl;
+                this->stop();
+                break;
+            }
+        }
+
+        // Periodically send status (if you want to push status unsolicited, else can remove)
+        auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
+        if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
+            // Optional: you may want to send unsolicited status here,
+            // but in your design reception sends STATUS_REQUEST to get status,
+            // so maybe no need to send periodic status here.
+            lastStatusTime = now;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+}
+
+bool Kitchen::handleIncomingMessage()
+{
+    // Read message size first (4 bytes)
     uint32_t size = 0;
     ssize_t bytesRead = read(_fd, &size, sizeof(size));
-    if (bytesRead != sizeof(size))
+    if (bytesRead == 0) {
+        std::cerr << "Pipe closed, kitchen shutting down." << std::endl;
         return false;
+    }
+    if (bytesRead != sizeof(size)) {
+        std::cerr << "Failed to read message size." << std::endl;
+        return false;
+    }
+
     std::vector<char> buffer(size);
     bytesRead = read(_fd, buffer.data(), size);
-    if (bytesRead != static_cast<ssize_t>(size))
+    if (bytesRead != static_cast<ssize_t>(size)) {
+        std::cerr << "Failed to read full message data." << std::endl;
         return false;
-    OrderMessage msg;
-    msg.deserialize(buffer);
-    auto pizzas = msg.getPizzas();
+    }
 
-    for (const auto & pizza : pizzas) {
+    // Determine message type from buffer (need to deserialize)
+    // Let's assume we can check type with OrderMessage and StatusRequestMessage
+
+    // Try OrderMessage
+    OrderMessage orderMsg;
+    try {
+        orderMsg.deserialize(buffer);
+    } catch (...) {
+        // Ignore, maybe it's not an order message
+    }
+
+    if (orderMsg.getType() == MessageType::COMMAND) {
+        return handleOrder(orderMsg);
+    }
+
+    // Try StatusRequest
+    // Assume StatusRequestMessage is similar or use message type directly
+    // For simplicity, let's just parse message type manually:
+    if (!buffer.empty()) {
+        MessageType type = static_cast<MessageType>(buffer[0]); // assuming first byte = message type
+        if (type == MessageType::STATUS_REQUEST) {
+            return sendStatusResponse();
+        }
+    }
+
+    std::cerr << "Unknown or unsupported message type received." << std::endl;
+    return false;
+}
+
+    bool Kitchen::handleOrder(const OrderMessage &orderMsg)
+{
+    auto pizzas = orderMsg.getPizzas();
+
+    for (const auto &pizza : pizzas) {
         if (_numberOfPizzas >= 2 * _numberOfCooks) {
             std::cout << "Kitchen full, cannot accept more pizzas\n";
             return false;
@@ -64,64 +156,16 @@ bool Plazza::Kitchen::handleOrder()
     return true;
 }
 
-void Plazza::Kitchen::start()
+bool Kitchen::sendStatusResponse()
 {
-    auto startTime = std::chrono::steady_clock::now();
-    auto lastStatusTime = startTime;
-    auto lastRestockTime = startTime;
+    StatusResponseMessage statusResponse(MessageType::STATUS_RESPONSE, _numberOfCooks, _numberOfPizzas, _numberOfCooks , _stock.getAll());
 
-    const int STATUS_INTERVAL_MS = 1000;
-
-    std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
-
-    while (_running) {
-        auto now = std::chrono::steady_clock::now();
-
-        auto elapsedTimeSec = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
-        if (elapsedTimeSec >= 5)
-            this->stop();
-
-        auto elapsedRestockMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRestockTime).count();
-        if (elapsedRestockMs >= _timeToRestock) {
-            _stock.restockAll();
-            lastRestockTime = now;
-        }
-        auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
-        if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
-            if (!this->handleStatus()) {
-                std::cerr << "Failed to send status." << std::endl;
-                this->stop();
-            }
-            lastStatusTime = now;
-        }
-        if (handleOrder())
-            this->stop();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
 }
 
-
-void Plazza::Kitchen::stop()
+void Kitchen::stop()
 {
     _running = false;
     std::cout << "Kitchen shutting down" << std::endl;
 }
 
-bool Plazza::Kitchen::handleStatus() 
-{
-    StatusMessage statusMessage;
-    statusMessage.setType(MessageType::STATUS);
-    statusMessage._totalCooks = _numberOfCooks;
-    statusMessage._busyCooks = _numberOfPizzas;
-    statusMessage.setStock(_stock.getAll());
-    std::vector<char> buffer;
-    statusMessage.serialize(buffer);
-    uint32_t size = buffer.size();
-    ssize_t bytesWritten = write(_fd, &size, sizeof(size));
-    if (bytesWritten != sizeof(size))
-        return false;
-    bytesWritten = write(_fd, buffer.data(), size);
-    if (bytesWritten != static_cast<ssize_t>(size))
-        return false;
-    return true;
-}
+} // namespace Plazza

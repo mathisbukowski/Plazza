@@ -15,6 +15,7 @@
 #include "Parser.hpp"
 #include "Event/EventLoop.hpp"
 #include "Kitchen/Stock.hpp"
+#include "Message/StatusResponseMessage.hpp"
 #include "Pizza/IPizza.hpp"
 #include "Tools/ForkEntity.hpp"
 #include "Tools/Pipe.hpp"
@@ -122,9 +123,9 @@ namespace Plazza
             int _numberOfCooksPerKitchen = 0; ///> Int to represent the number of cooks
             int _timeToRestockIngredients = 0; ///> time to Restock
             std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels
-            EventLoop _pollLoop; ///> Event loop for handling events
-            std::vector<KitchenStatus> _latestStatuses; ///> Vector to store the latest statuses of kitchens
+            std::vector<StatusResponseMessage *> _latestStatuses; ///> Vector to store the latest statuses of kitchens
             void receiveStatusFromKitchen(); ///> Function to receive status from kitchens
+            int orderId = 0;
 
     };
 }
