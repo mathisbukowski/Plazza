@@ -10,6 +10,8 @@
 
 #include <vector>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include "plazza.hpp"
 
 namespace Plazza {
