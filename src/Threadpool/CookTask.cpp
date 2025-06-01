@@ -6,6 +6,7 @@
 */
 
 #include "CookTask.hpp"
+#include "Logger/Logger.hpp"
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -35,18 +36,20 @@ namespace Plazza {
     void CookTask::execute()
     {
         if (!_stock.consumeIngredientsFor(_pizza)) {
-            std::cout << "Cannot cook pizza: missing ingredients\n";
+            LOG_WARNING("CookTask", "Cannot cook pizza: missing ingredients");
             return;
         }
         int baseTime = this->getBaseCookTime(_pizza->getType());
         int actualTimeMs = static_cast<int>(baseTime * _multiplier * 1000);
 
-        std::cout << "Cooking pizza (type " << static_cast<int>(_pizza->getType())
-                      << ", size " << static_cast<int>(_pizza->getSize()) << ")...\n";
+        LOG_INFO("CookTask", "Cooking pizza (type " + std::to_string(static_cast<int>(_pizza->getType())) +
+                             ", size " + std::to_string(static_cast<int>(_pizza->getSize())) + ")...");
 
         std::this_thread::sleep_for(std::chrono::milliseconds(actualTimeMs));
 
-        std::cout << "Pizza cooked!\n";
-
+        std::cout << "Pizza cooked"
+                  << " (type " << static_cast<int>(_pizza->getType())
+                  << ", size " << static_cast<int>(_pizza->getSize()) << ")"
+                  << std::endl;
     }
 }
