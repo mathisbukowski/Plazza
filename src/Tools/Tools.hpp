@@ -36,6 +36,8 @@ namespace Plazza {
          * @return The number of bytes read, or -1 on error.
          */
         static ssize_t toolRead(int fd, void *buf, size_t count);
+
+        static ssize_t toolWrite(int fd, const void *buf, size_t count);
     };
 
 } // namespace Plazza
