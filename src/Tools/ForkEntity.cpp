@@ -7,6 +7,7 @@
 
 #include "ForkEntity.hpp"
 #include <sys/wait.h>
+#include <unistd.h>
 #include <iostream>
 #include <stdexcept>
 

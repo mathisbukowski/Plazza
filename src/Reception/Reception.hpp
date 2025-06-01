@@ -54,6 +54,7 @@ namespace Plazza
             public:
                 int _totalCooks = 0; ///> Total number of cooks in the kitchen
                 int _busyCooks = 0; ///> Number of busy cooks
+                int _currentPizzas = 0; ///> Current number of pizzas being processed
                 std::array<int, IngredientCount> _stock{}; ///> Array to hold stock quantities of ingredients
             };
             /**
@@ -124,6 +125,7 @@ namespace Plazza
             std::vector<KitchenChannel> _kitchens; ///> Vector of kitchen channels
             EventLoop _pollLoop; ///> Event loop for handling events
             std::vector<KitchenStatus> _latestStatuses; ///> Vector to store the latest statuses of kitchens
+            std::vector<int> _kitchenPizzaCounts; ///> Track pizzas sent to each kitchen
             void receiveStatusFromKitchen(); ///> Function to receive status from kitchens
 
     };

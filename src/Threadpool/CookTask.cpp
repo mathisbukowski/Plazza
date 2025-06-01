@@ -12,8 +12,8 @@
 
 
 namespace Plazza {
-    CookTask::CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier, Stock &stock)
-        : _pizza(pizza), _multiplier(multiplier), _stock(stock)
+    CookTask::CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier, Stock &stock, std::function<void()> onComplete)
+        : _pizza(pizza), _multiplier(multiplier), _stock(stock), _onComplete(onComplete)
     {}
 
     int CookTask::getBaseCookTime(PizzaType type) const
@@ -41,12 +41,14 @@ namespace Plazza {
         int baseTime = this->getBaseCookTime(_pizza->getType());
         int actualTimeMs = static_cast<int>(baseTime * _multiplier * 1000);
 
-        std::cout << "Cooking pizza (type " << static_cast<int>(_pizza->getType())
-                      << ", size " << static_cast<int>(_pizza->getSize()) << ")...\n";
+        std::cout << "Cooking pizza...\n";
 
         std::this_thread::sleep_for(std::chrono::milliseconds(actualTimeMs));
 
         std::cout << "Pizza cooked!\n";
 
+        if (_onComplete) {
+            _onComplete();
+        }
     }
 }

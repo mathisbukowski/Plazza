@@ -69,7 +69,6 @@ namespace Plazza {
             int _fd; ///> Fd of the kitchen for communication
             std::unique_ptr<ThreadPool> _threadPool;
             double _multiplier;
-            static constexpr  int STATUS_INTERVAL_MS = 1000; ///> Interval of status sending
     };
 }
 
