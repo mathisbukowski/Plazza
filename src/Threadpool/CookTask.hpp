@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <vector>
+#include <functional>
 #include "../Pizza/IPizza.hpp"
 #include "ICookTask.hpp"
 #include "../Kitchen/Stock.hpp"
@@ -28,7 +29,7 @@ namespace Plazza {
              * @param multiplier The cooking time multiplier
              * @param stock Reference to the kitchen's stock
              */
-            CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier, Stock& stock);
+            CookTask(const std::shared_ptr<IPizza>& pizza, double multiplier, Stock& stock, std::function<void()> onComplete = nullptr);
             /**
              * Destructor for CookTask.
              * Cleans up resources used by the cooking task.
@@ -39,6 +40,7 @@ namespace Plazza {
             const std::shared_ptr<IPizza>& _pizza; ///> Shared pointer to the pizza to be cooked
             double _multiplier; ///> Cooking time multiplier
             Stock& _stock;
+            std::function<void()> _onComplete; ///> Callback to execute when cooking is complete
             /**
              * Gets the base cooking time for a specific pizza type.
              * @param type The type of the pizza

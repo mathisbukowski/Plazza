@@ -8,6 +8,11 @@
 #include "Kitchen.hpp"
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
+#include "Message/NotificationMessage.hpp"
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
 {
@@ -18,6 +23,13 @@ Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multi
     _fd = fd;
     _threadPool = std::make_unique<ThreadPool>(numberOfCooks);
     _multiplier = multiplier;
+
+    int flags = fcntl(_fd, F_GETFL, 0);
+    if (flags == -1) {
+        std::cerr << "Failed to get file descriptor flags\n";
+    } else if (fcntl(_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        std::cerr << "Failed to set file descriptor to non-blocking\n";
+    }
 }
 
 Plazza::Kitchen::Kitchen(const Plazza::Kitchen &other)
@@ -41,44 +53,70 @@ bool Plazza::Kitchen::handleOrder()
 {
     uint32_t size = 0;
     ssize_t bytesRead = read(_fd, &size, sizeof(size));
-    if (bytesRead != sizeof(size))
+    if (bytesRead == 0) {
         return false;
+    }
+    if (bytesRead != sizeof(size)) {
+        if (bytesRead == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+            return false;
+        }
+        std::cerr << "Failed to read message size\n";
+        return false;
+    }
+
     std::vector<char> buffer(size);
     bytesRead = read(_fd, buffer.data(), size);
-    if (bytesRead != static_cast<ssize_t>(size))
+    if (bytesRead != static_cast<ssize_t>(size)) {
+        std::cerr << "Failed to read complete message\n";
         return false;
+    }
+    
     OrderMessage msg;
     msg.deserialize(buffer);
-    auto pizzas = msg.getPizzas();
+    
+    if (msg.getType() == MessageType::STATUS) {
+        return this->handleStatus();
+    }
 
+    auto pizzas = msg.getPizzas();
+    bool ordersProcessed = false;
     for (const auto & pizza : pizzas) {
         if (_numberOfPizzas >= 2 * _numberOfCooks) {
             std::cout << "Kitchen full, cannot accept more pizzas\n";
-            return false;
+            break;
         }
-        auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
+        auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock, [this, pizza]() {
+            _numberOfPizzas--;
+            NotificationMessage readyMsg(MessageType::PIZZA_READY, 
+                "Pizza ready: type " + std::to_string(static_cast<int>(pizza->getType())) + 
+                " size " + std::to_string(static_cast<int>(pizza->getSize())));
+            std::vector<char> buffer;
+            readyMsg.serialize(buffer);
+            uint32_t size = buffer.size();
+            write(_fd, &size, sizeof(size));
+            write(_fd, buffer.data(), size);
+        });
         _threadPool->enqueueTask(cookTask);
         _numberOfPizzas++;
+        ordersProcessed = true;
         std::cout << "Pizza added to cooking queue\n";
     }
-    return true;
+    return ordersProcessed;
 }
 
 void Plazza::Kitchen::start()
 {
     auto startTime = std::chrono::steady_clock::now();
-    auto lastStatusTime = startTime;
     auto lastRestockTime = startTime;
-
-    const int STATUS_INTERVAL_MS = 1000;
+    auto lastActivityTime = startTime;
 
     std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
 
     while (_running) {
         auto now = std::chrono::steady_clock::now();
 
-        auto elapsedTimeSec = std::chrono::duration_cast<std::chrono::seconds>(now - startTime).count();
-        if (elapsedTimeSec >= 5)
+        auto elapsedTimeSec = std::chrono::duration_cast<std::chrono::seconds>(now - lastActivityTime).count();
+        if (elapsedTimeSec >= 5 && _numberOfPizzas == 0)
             this->stop();
 
         auto elapsedRestockMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastRestockTime).count();
@@ -86,16 +124,9 @@ void Plazza::Kitchen::start()
             _stock.restockAll();
             lastRestockTime = now;
         }
-        auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
-        if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
-            if (!this->handleStatus()) {
-                std::cerr << "Failed to send status." << std::endl;
-                this->stop();
-            }
-            lastStatusTime = now;
+        if (handleOrder()) {
+            lastActivityTime = now;
         }
-        if (handleOrder())
-            this->stop();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }

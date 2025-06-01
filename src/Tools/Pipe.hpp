@@ -96,6 +96,32 @@ namespace Plazza {
          * This method writes the data to the specified file descriptor.
          */
         void writeInChannel(int& fd, std::vector<char> data);
+        
+        /**
+         * Operator overload for sending messages through the pipe.
+         * @param message The message to send
+         * @return Reference to this PipeChannel for chaining
+         * @tparam T The type of the message, which must implement serialize method
+         */
+        template<typename T>
+        PipeChannel& operator<<(const T& message) {
+            send(getParentFd(), message);
+            return *this;
+        }
+        
+        /**
+         * Operator overload for receiving messages from the pipe.
+         * @param message Reference to store the received message
+         * @return Reference to this PipeChannel for chaining
+         * @tparam T The type of the message, which must implement deserialize method
+         */
+        template<typename T>
+        PipeChannel& operator>>(T& message) {
+            auto received = receive<T>(getParentFd());
+            message = *received;
+            return *this;
+        }
+        
     private:
         int _fds[2]; ///> Array to hold the file descriptors for the pipe
 
