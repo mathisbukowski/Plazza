@@ -12,7 +12,7 @@
 namespace Plazza {
     void StatusMessage::serialize(std::vector<char>& buffer) const
     {
-        size_t totalSize = getPackedSize();
+        std::size_t totalSize = this->getPackedSize();
         buffer.resize(totalSize);
         char* ptr = buffer.data();
 
@@ -44,7 +44,7 @@ namespace Plazza {
         }
     }
 
-    size_t StatusMessage::getPackedSize() const
+    std::size_t StatusMessage::getPackedSize() const
     {
         return sizeof(MessageType) + 2 * sizeof(int) + IngredientCount * sizeof(int);
     }

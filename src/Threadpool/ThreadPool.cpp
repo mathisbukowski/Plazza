@@ -10,8 +10,8 @@
 
 namespace Plazza {
 
-    ThreadPool::ThreadPool(size_t threadCount) : _stop(false) {
-        for (size_t i = 0; i < threadCount; ++i)
+    ThreadPool::ThreadPool(std::size_t threadCount) : _stop(false) {
+        for (std::size_t i = 0; i < threadCount; ++i)
             _workers.emplace_back(&ThreadPool::workerLoop, this);
     }
 
