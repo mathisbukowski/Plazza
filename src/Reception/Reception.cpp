@@ -14,7 +14,7 @@
 #include "Message/OrderMessage.hpp"
 #include "Tools/ResultException.hpp"
 #include "Message/StatusMessage.hpp"
-
+#include "Logger/Logger.hpp"
 
 namespace Plazza {
 
@@ -26,9 +26,9 @@ namespace Plazza {
         for (const auto& kitchen : _kitchens) {
             try {
                 int status = kitchen._fork->waitChild();
-                std::cout << "Kitchen exited with status: " << status << std::endl;
+                LOG_INFO("Reception", "Kitchen exited with status: " + std::to_string(status));
             } catch (const ForkEntity::ForkEntityException& e) {
-                std::cerr << "Error while waiting for kitchen: " << e.what() << std::endl;
+                LOG_ERROR("Reception", "Error while waiting for kitchen: " + std::string(e.what()));
             }
         }
         _kitchens.clear();
@@ -58,7 +58,7 @@ namespace Plazza {
             try {
                 this->handleInput(input);
             } catch (const ReceptionException &e) {
-                std::cerr << "Error: " << e.what() << std::endl;
+                LOG_ERROR("Reception", "Error: " + std::string(e.what()));
             }
 
             _pollLoop.pollOnce(100);
@@ -84,7 +84,7 @@ namespace Plazza {
         try {
             forkEntity = std::make_unique<ForkEntity>();
         } catch (const ForkEntity::ForkEntityException& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            LOG_ERROR("Reception", "Error creating fork: " + std::string(e.what()));
             return;
         }
 
@@ -108,7 +108,7 @@ namespace Plazza {
                     std::copy(status->getStock().begin(), status->getStock().end(), ks._stock.begin());
                     _latestStatuses[idx] = std::move(ks);
                 } catch (const std::exception& e) {
-                    std::cerr << "Receive error: " << e.what() << std::endl;
+                    LOG_ERROR("Reception", "Receive error: " + std::string(e.what()));
                 }
             }
         );
@@ -120,23 +120,26 @@ namespace Plazza {
 
     void Reception::handleStatus()
     {
-        std::cout << "Requesting status from all kitchens..." << std::endl;
+        LOG_INFO("Reception", "Requesting status from all kitchens...");
         for (auto& kitchen : _kitchens) {
             OrderMessage msg;
             msg.setType(MessageType::STATUS);
             kitchen._pipe->send(kitchen._pipe->getParentFd(), msg);
         }
-        std::cout << "Status of kitchen :\n";
+
+        std::string statusReport = "Status of kitchens:\n";
         for (size_t i = 0; i < _latestStatuses.size(); ++i) {
             auto& status = _latestStatuses[i];
-            std::cout << "Kitchen #" << i << "\n";
-            std::cout << "  Total Cooks: " << status._totalCooks << "\n";
-            std::cout << "  Busy Cooks: " << status._busyCooks << "\n";
-            std::cout << "  Stock: ";
-            for (int j = 0; j < IngredientCount; ++j)
-                std::cout << static_cast<Ingredient>(j) << ": " << status._stock[j] << " ";
-            std::cout << "\n";
+            statusReport += "Kitchen #" + std::to_string(i) + "\n";
+            statusReport += "  Total Cooks: " + std::to_string(status._totalCooks) + "\n";
+            statusReport += "  Busy Cooks: " + std::to_string(status._busyCooks) + "\n";
+            statusReport += "  Stock: ";
+            for (int j = 0; j < IngredientCount; ++j) {
+                statusReport += std::to_string(static_cast<int>(static_cast<Ingredient>(j))) + ": " + std::to_string(status._stock[j]) + " ";
+            }
+            statusReport += "\n";
         }
+        LOG_INFO("Reception", statusReport);
     }
 
     void Reception::dispatchCommandsToKitchen(std::vector<std::shared_ptr<IPizza>> pizzas)

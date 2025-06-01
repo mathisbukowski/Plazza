@@ -9,6 +9,7 @@
 
 #include "Build/ReceptionBuilder.hpp"
 #include "Reception/Reception.hpp"
+#include "Logger/Logger.hpp"
 
 int main(int ac, char **av)
 {
@@ -19,6 +20,7 @@ int main(int ac, char **av)
     std::shared_ptr<Plazza::Reception> reception;
 
     try {
+        Plazza::Logger::getInstance().setLogFile("plazza.log");
         Plazza::ReceptionBuilder receptionBuilder;
 
         reception = receptionBuilder.setMultiplier(av[1]).setNumberOfCooks(av[2]).setTimePerRestock(av[3]).build();

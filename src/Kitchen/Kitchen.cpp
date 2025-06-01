@@ -9,6 +9,7 @@
 #include "Message/StatusMessage.hpp"
 #include "Message/OrderMessage.hpp"
 #include "Tools/Tools.hpp"
+#include "Logger/Logger.hpp"
 
 Plazza::Kitchen::Kitchen(int numberOfCooks, int timeToRestock, int fd, int multiplier)
 {
@@ -35,7 +36,7 @@ Plazza::Kitchen::~Kitchen()
         this->stop();
     }
     _threadPool.reset();
-    std::cout << "[Kitchen " << Tools::toolGetPid() << "] stopped." << std::endl;
+    LOG_INFO("Kitchen", "Kitchen " + std::to_string(Tools::toolGetPid()) + " stopped.");
 }
 
 bool Plazza::Kitchen::handleOrder()
@@ -54,13 +55,13 @@ bool Plazza::Kitchen::handleOrder()
 
     for (const auto & pizza : pizzas) {
         if (_numberOfPizzas >= 2 * _numberOfCooks) {
-            std::cout << "Kitchen full, cannot accept more pizzas\n";
+            LOG_WARNING("Kitchen", "Kitchen full, cannot accept more pizzas");
             return false;
         }
         auto cookTask = std::make_shared<CookTask>(pizza, _multiplier, _stock);
         _threadPool->enqueueTask(cookTask);
         _numberOfPizzas++;
-        std::cout << "Pizza added to cooking queue\n";
+        LOG_INFO("Kitchen", "Pizza added to cooking queue");
     }
     return true;
 }
@@ -73,7 +74,7 @@ void Plazza::Kitchen::start()
 
     const int STATUS_INTERVAL_MS = 1000;
 
-    std::cout << "[Kitchen PID " << getpid() << "] started with " << _numberOfCooks << " cooks." << std::endl;
+    LOG_INFO("Kitchen", "Kitchen PID " + std::to_string(getpid()) + " started with " + std::to_string(_numberOfCooks) + " cooks.");
 
     while (_running) {
         auto now = std::chrono::steady_clock::now();
@@ -90,7 +91,7 @@ void Plazza::Kitchen::start()
         auto elapsedStatusMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStatusTime).count();
         if (elapsedStatusMs >= STATUS_INTERVAL_MS) {
             if (!this->handleStatus()) {
-                std::cerr << "Failed to send status." << std::endl;
+                LOG_ERROR("Kitchen", "Failed to send status.");
                 this->stop();
             }
             lastStatusTime = now;
@@ -105,10 +106,10 @@ void Plazza::Kitchen::start()
 void Plazza::Kitchen::stop()
 {
     _running = false;
-    std::cout << "Kitchen shutting down" << std::endl;
+    LOG_INFO("Kitchen", "Kitchen shutting down");
 }
 
-bool Plazza::Kitchen::handleStatus() 
+bool Plazza::Kitchen::handleStatus()
 {
     StatusMessage statusMessage;
     statusMessage.setType(MessageType::STATUS);
