@@ -8,6 +8,8 @@
 #include "Pipe.hpp"
 #include <sys/socket.h>
 
+#include "Tools.hpp"
+
 namespace Plazza {
     PipeChannel::PipeChannel()
     {
@@ -53,4 +55,31 @@ namespace Plazza {
             fd = -1;
         }
     }
+
+    std::shared_ptr<IMessage> PipeChannel::receive(int fd)
+    {
+        uint32_t size = 0;
+        ssize_t bytes = Tools::toolRead(fd, &size, sizeof(size));
+        if (bytes != sizeof(size))
+            throw std::runtime_error("failed to read from pipe");
+        std::vector<char> buffer(size);
+        bytes = Tools::toolRead(fd, buffer.data(), size);
+        if (bytes != static_cast<ssize_t>(size))
+            throw std::runtime_error("failed to read from pipe");
+        std::shared_ptr<IMessage> message = std::make_shared<IMessage>();
+        message->deserialize(buffer);
+        return message;
+    }
+
+    void PipeChannel::send(int fd, const IMessage& message)
+    {
+        std::vector<char> buffer;
+        message.serialize(buffer);
+        uint32_t size = buffer.size();
+        if (Tools::toolWrite(fd, &size, sizeof(size)) == -1)
+            throw std::runtime_error("write failed");
+        if (Tools::toolWrite(fd, buffer.data(), buffer.size()) == -1)
+            throw std::runtime_error("write failed");
+    }
+
 }

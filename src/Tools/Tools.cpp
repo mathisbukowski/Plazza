@@ -23,3 +23,11 @@ ssize_t Plazza::Tools::toolRead(int fd, void *buf, size_t count)
         std::cerr << "read() failed: " << strerror(errno) << std::endl;
     return ret;
 }
+
+ssize_t Plazza::Tools::toolWrite(int fd, const void *buf, size_t count)
+{
+    ssize_t ret = write(fd, buf, count);
+    if (ret == -1)
+        std::cerr << "write() failed: " << strerror(errno) << std::endl;
+    return ret;
+}
